@@ -9,42 +9,29 @@ class BendingConstraint(
     private val i1: Int,
     private val i2: Int,
     private val stiffness: Float,
-    breakingDiff: Float
+    breakingDiff: Float,
+    private val linked0: SpringConstraint? = null,
 ) : ParticleConstraint {
 
     private val breakingDiffSq = sq(breakingDiff)
 
     override fun solve(p: ParticleSet, dt: Float): Boolean {
-        val x0 = p.tx[i0]
-        val y0 = p.ty[i0]
-        val z0 = p.tz[i0]
-
-        val x1 = p.tx[i1]
-        val y1 = p.ty[i1]
-        val z1 = p.tz[i1]
-
-        val x2 = p.tx[i2]
-        val y2 = p.ty[i2]
-        val z2 = p.tz[i2]
-
-        // Target midpoint
-        val mx = (x0 + x2) * 0.5f
-        val my = (y0 + y2) * 0.5f
-        val mz = (z0 + z2) * 0.5f
-
-        val dx = x1 - mx
-        val dy = y1 - my
-        val dz = z1 - mz
+        val dx = p.tx[i1] - (p.tx[i0] + p.tx[i2]) * 0.5f
+        val dy = p.ty[i1] - (p.ty[i0] + p.ty[i2]) * 0.5f
+        val dz = p.tz[i1] - (p.tz[i0] + p.tz[i2]) * 0.5f
 
         val w0 = p.invMass[i0]
         val w1 = p.invMass[i1]
         val w2 = p.invMass[i2]
 
-        val wSum = w0 * 0.25f + w1 + w2 * 0.25f
+        val wSum = (w0 + w2) * 0.25f + w1
         if (wSum == 0f) return false
 
-        val corr = stiffness / wSum * dt
-        if (sq(dx, dy, dz) >= breakingDiffSq) return true
+        val corr = stiffness * dt / wSum
+        if (sq(dx, dy, dz) >= breakingDiffSq) {
+            linked0?.breakManually()
+            return true
+        }
 
         // Middle particle gets full correction
         p.addT(i1, dx, dy, dz, -corr * w1)

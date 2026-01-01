@@ -10,10 +10,20 @@ interface ParticleConstraint {
     fun solve(p: ParticleSet, dt: Float): Boolean
 
     companion object {
-        fun ParticleSet.addT(k: Int, vx: Float, vy: Float, vz: Float, scale: Float) {
-            tx[k] += vx * scale
-            ty[k] += vy * scale
-            tz[k] += vz * scale
+        fun ParticleSet.addT(k: Int, nx: Float, ny: Float, nz: Float, scale: Float) {
+            tx[k] += nx * scale
+            ty[k] += ny * scale
+            tz[k] += nz * scale
+        }
+
+        fun ParticleSet.addV(k: Int, nx: Float, ny: Float, nz: Float, scale: Float) {
+            addV(k, nx * scale, ny * scale, nz * scale)
+        }
+
+        fun ParticleSet.addV(k: Int, nx: Float, ny: Float, nz: Float) {
+            vx[k] += nx
+            vy[k] += ny
+            vz[k] += nz
         }
     }
 }

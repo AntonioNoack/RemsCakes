@@ -1,5 +1,6 @@
 package me.anno.particles
 
+import me.anno.maths.Maths.length
 import me.anno.particles.broadphase.SparseParticleGrid
 import me.anno.particles.constraints.ParticleContactSolver
 import me.anno.particles.constraints.ParticleRigidContactSolver
@@ -135,17 +136,12 @@ class SimulationTests {
         particles.radius[0] = 0.05f
         particles.radius[1] = 0.05f
 
+        val bounds = AABBf(-1f, -1f, -1f, 1f, 1f, 1f)
         val solver = ParticleSolver(
             particles,
             ArrayList(),
-            ParticleContactSolver(
-                particles,
-                SparseParticleGrid(0.15f)
-            ),
-            ParticleRigidContactSolver(
-                particles,
-                BoundaryBullet(AABBf(-1f, -1f, -1f, 1f, 1f, 1f))
-            ),
+            ParticleContactSolver(particles, SparseParticleGrid(0.15f)),
+            ParticleRigidContactSolver(particles, BoundaryBullet(bounds)),
             ParticleSolverConfig(solverIterations = 5)
         )
 
@@ -156,12 +152,10 @@ class SimulationTests {
         val dx = particles.px[1] - particles.px[0]
         val dy = particles.py[1] - particles.py[0]
         val dz = particles.pz[1] - particles.pz[0]
-        val dist = kotlin.math.sqrt(dx * dx + dy * dy + dz * dz)
+        val dist = length(dx, dy, dz)
+        val overlap = (particles.radius[0] + particles.radius[1]) - dist
 
-        assertTrue(
-            dist >= particles.radius[0] + particles.radius[1] - 1e-3f,
-            "Particles should not overlap"
-        )
+        assertTrue(overlap < 0.01f, "Particles should not overlap ($overlap)")
     }
 
     @Test

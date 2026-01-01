@@ -65,7 +65,7 @@ class ParticleSet(
         copyInto(py, dst.py, size)
         copyInto(pz, dst.pz, size)
 
-        copyInto(ppx, dst.px, size)
+        copyInto(ppx, dst.ppx, size)
         copyInto(ppy, dst.ppy, size)
         copyInto(ppz, dst.ppz, size)
 

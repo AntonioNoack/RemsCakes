@@ -77,6 +77,9 @@ class FluidSimulationTests {
         assertTrue(finalY < initialY, "Fluid should move down under gravity")
     }
 
+    // todo fixing the velocity-explosion issue somehow prevents our fluids from sorting...
+    //  because it's finally stable???
+
     @Test
     fun `fluids separate by density`() {
         val light = createFluidParticles(100, density = 1.0f)

@@ -58,9 +58,7 @@ class NoodleSimulationTests {
             constraints = ArrayList(constraints),
             ParticleContactSolver(particles, SparseParticleGrid(0.07f)),
             ParticleRigidContactSolver(particles, BoundaryBullet(bounds)),
-            config = ParticleSolverConfig(
-                solverIterations = 10,
-            )
+            config = ParticleSolverConfig(solverIterations = 10,)
         )
     }
 

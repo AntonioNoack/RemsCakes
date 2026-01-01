@@ -5,12 +5,13 @@ import me.anno.engine.ui.render.SceneView.Companion.testSceneWithUI
 import me.anno.particles.NoodleSimulationTests
 import me.anno.particles.ParticleSet
 import me.anno.particles.constraints.BendingConstraint
+import me.anno.particles.constraints.SpringConstraint
 import me.anno.particles.utils.ParticlePhysics
 import me.anno.particles.utils.SphereParticleRenderer
 
-fun createBendingConstraints(particles: ParticleSet): List<BendingConstraint> {
+fun createBendingConstraints(particles: ParticleSet, springs: List<SpringConstraint>): List<BendingConstraint> {
     return List(particles.size - 2) { i0 ->
-        BendingConstraint(i0, i0 + 1, i0 + 2, 60f, 0.05f)
+        BendingConstraint(i0, i0 + 1, i0 + 2, 60f, 0.04f, springs[i0])
     }
 }
 
@@ -18,7 +19,7 @@ fun main() {
     val helper = NoodleSimulationTests()
     val (particles, springs) = helper.createNoodle(20, 0.5f, 60f)
 
-    val solver = helper.createSolver(particles, springs + createBendingConstraints(particles))
+    val solver = helper.createSolver(particles, springs + createBendingConstraints(particles, springs))
     val scene = Entity()
         .add(SphereParticleRenderer(particles, emptyList()))
         .add(ParticlePhysics(solver, 1f / 60f))

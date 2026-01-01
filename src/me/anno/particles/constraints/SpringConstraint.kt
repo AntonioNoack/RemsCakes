@@ -10,21 +10,15 @@ class SpringConstraint(
     private val j: Int,
     private val restLength: Float,
     private val stiffness: Float,
-    private val breakingDiff: Float,
+    var breakingDiff: Float,
 ) : ParticleConstraint {
 
     override fun solve(p: ParticleSet, dt: Float): Boolean {
-        val ix = p.tx[i]
-        val iy = p.ty[i]
-        val iz = p.tz[i]
+        if (breakingDiff <= 0f) return true
 
-        val jx = p.tx[j]
-        val jy = p.ty[j]
-        val jz = p.tz[j]
-
-        val dx = jx - ix
-        val dy = jy - iy
-        val dz = jz - iz
+        val dx = p.tx[j] - p.tx[i]
+        val dy = p.ty[j] - p.ty[i]
+        val dz = p.tz[j] - p.tz[i]
 
         val distSq = dx * dx + dy * dy + dz * dz
         if (distSq < 1e-10f) return false
@@ -44,5 +38,9 @@ class SpringConstraint(
         p.addT(i, dx, dy, dz, +w1 * corr)
         p.addT(j, dx, dy, dz, -w2 * corr)
         return false
+    }
+
+    fun breakManually() {
+        breakingDiff = -1f
     }
 }

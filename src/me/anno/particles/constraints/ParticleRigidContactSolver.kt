@@ -6,15 +6,17 @@ import me.anno.particles.RaycastHit
 import me.anno.particles.constraints.ParticleConstraint.Companion.addT
 import kotlin.math.sqrt
 
+/**
+ * Enforces distance from rigidbodies to particles
+ * */
 class ParticleRigidContactSolver(
     private val particles: ParticleSet,
     private val bullet: BulletCollisionWorld,
-    private val stiffness: Float = 1.0f
 ) {
 
     private val dst = RaycastHit(0f, 0f, 0f, 0f, 0f, 0f)
 
-    fun solveContacts(dt: Float) {
+    fun solveContacts() {
         for (i in 0 until particles.size) {
             if (particles.invMass[i] == 0f) continue
 
@@ -66,10 +68,9 @@ class ParticleRigidContactSolver(
             // println("Penetration[$px,$py,$pz -> $tx,$ty,$tz]: $penetration0 x $radius -> $penetration, Hit: $hit")
             if (penetration >= 0f) continue
 
-            val correction = penetration * stiffness
             // println("Delta: ${-correction * ny}")
 
-            particles.addT(i, nx, ny, nz, -correction)
+            particles.addT(i, nx, ny, nz, -penetration)
 
             // TODO: tangential friction against rigid body
             // TODO: rolling resistance

@@ -1,9 +1,10 @@
 package me.anno.particles
 
+import me.anno.maths.Maths.sq
 import me.anno.particles.constraints.ParticleConstraint
+import me.anno.particles.constraints.ParticleConstraint.Companion.addV
 import me.anno.particles.constraints.ParticleContactSolver
 import me.anno.particles.constraints.ParticleRigidContactSolver
-import java.util.Random
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -14,7 +15,7 @@ class ParticleSolver(
     private val constraints: MutableList<ParticleConstraint>,
     private val contactSolver: ParticleContactSolver,
     private val rigidContacts: ParticleRigidContactSolver,
-    private val config: ParticleSolverConfig
+    val config: ParticleSolverConfig
 ) {
 
     fun step(dt: Float) {
@@ -29,12 +30,12 @@ class ParticleSolver(
     }
 
     private fun applyExternalForces(dt: Float) {
+        val gx = config.gravity.x * dt
+        val gy = config.gravity.y * dt
+        val gz = config.gravity.z * dt
         for (i in 0 until particles.size) {
             if (particles.invMass[i] == 0f) continue
-
-            particles.vx[i] += config.gravityX * dt
-            particles.vy[i] += config.gravityY * dt
-            particles.vz[i] += config.gravityZ * dt
+            particles.addV(i, gx, gy, gz)
         }
     }
 
@@ -72,7 +73,7 @@ class ParticleSolver(
         repeat(config.solverIterations) {
             constraints.removeIf { it.solve(particles, dt) }
             contactSolver.solveContacts()
-            rigidContacts.solveContacts(dt)
+            rigidContacts.solveContacts()
         }
     }
 
@@ -98,6 +99,7 @@ class ParticleSolver(
     private fun applyVelocityCorrections(dt: Float) {
         val invDt = 1f / dt
         for (i in 0 until particles.size) {
+
             var vx = (particles.tx[i] - particles.ppx[i]) * invDt
             var vy = (particles.ty[i] - particles.ppy[i]) * invDt
             var vz = (particles.tz[i] - particles.ppz[i]) * invDt
@@ -140,6 +142,19 @@ class ParticleSolver(
                 }
             }
 
+            val ovx = particles.vx[i]
+            val ovy = particles.vy[i]
+            val ovz = particles.vz[i]
+
+            val newEnergy = sq(vx, vy, vz)
+            val oldEnergy = sq(ovx, ovy, ovz)
+            if (newEnergy > oldEnergy) {
+                val scale = sqrt(oldEnergy / newEnergy)
+                vx *= scale
+                vy *= scale
+                vz *= scale
+            }
+
             particles.vx[i] = vx
             particles.vy[i] = vy
             particles.vz[i] = vz
@@ -155,7 +170,7 @@ class ParticleSolver(
         val dx = particles.px[j] - particles.px[i]
         val dy = particles.py[j] - particles.py[i]
         val dz = particles.pz[j] - particles.pz[i]
-        val dist = sqrt(dx * dx + dy * dy + dz * dz)
+        val dist = sqrt(max(dx * dx + dy * dy + dz * dz, 0f))
         if (dist == 0f) return false
 
         val nx = dx / dist
@@ -203,16 +218,8 @@ class ParticleSolver(
         // is this correct, or should we use 1/invMass?
         // ratio stays the same, so both ways work
         val scale = factor / (m1 + m2)
-        val s1 = m1 * scale
-        val s2 = m2 * scale
-
-        particles.vx[i] += dtx * s1
-        particles.vy[i] += dty * s1
-        particles.vz[i] += dtz * s1
-
-        particles.vx[j] -= dtx * s2
-        particles.vy[j] -= dty * s2
-        particles.vz[j] -= dtz * s2
+        particles.addV(i, dtx, dty, dtz, +m1 * scale)
+        particles.addV(i, dtx, dty, dtz, -m2 * scale)
     }
 
     private fun updateFinalPositions() {

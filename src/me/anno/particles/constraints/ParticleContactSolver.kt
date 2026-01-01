@@ -7,12 +7,12 @@ import me.anno.particles.constraints.ParticleConstraint.Companion.addT
 import kotlin.math.sqrt
 
 /**
- * This is where sand-behavior emerges
+ * Enforces distance between particles
  * */
 class ParticleContactSolver(
     private val particles: ParticleSet,
     private val grid: ParticleBroadphase,
-    private val stiffness: Float = 1f
+    val stiffness: Float = 0.2f,
 ) {
 
     var numClose = 0
@@ -54,22 +54,17 @@ class ParticleContactSolver(
         val dist = sqrt(distSq)
         val penetration = minDist - dist
 
-        val invDist = 1f / dist
-        val nx = dx * invDist
-        val ny = dy * invDist
-        val nz = dz * invDist
-
         val w1 = particles.invMass[i]
         val w2 = particles.invMass[j]
         val wSum = w1 + w2
         if (wSum == 0f) return
-        val invW = 1f / wSum
 
         numHit++
 
-        val correction = penetration * stiffness * invW
-        particles.addT(i, nx, ny, nz, -w1 * correction)
-        particles.addT(j, nx, ny, nz, +w2 * correction)
+        // 0.2 works nicely for dough, but sand probably needs something harder...
+        val correction = stiffness * penetration / (dist * wSum)
+        particles.addT(i, dx, dy, dz, -w1 * correction)
+        particles.addT(j, dx, dy, dz, +w2 * correction)
 
         if (particles.cohesion[i] > 0f || particles.cohesion[j] > 0f) {
             particles.cohesionBonds.add(CohesionBond(i, j))

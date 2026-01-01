@@ -3,10 +3,16 @@ package me.anno.particles.utils
 import me.anno.particles.BulletCollisionWorld
 import me.anno.particles.RaycastHit
 import org.joml.AABBf
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.sqrt
 
 class BoundaryBullet(val bounds: AABBf) : BulletCollisionWorld {
+
+    companion object {
+        private val divisor = FloatArray(4) { 1f / sqrt(max(it, 1).toFloat()) }
+    }
 
     override fun raycast(
         fromX: Float, fromY: Float, fromZ: Float,
@@ -26,13 +32,19 @@ class BoundaryBullet(val bounds: AABBf) : BulletCollisionWorld {
             0f
         )
         if (!distance.isFinite()) return null
+
         val hitX = fromX + dirX * distance
         val hitY = fromY + dirY * distance
         val hitZ = fromZ + dirZ * distance
+
         val normalX = eq(hitX, bounds.minX, bounds.maxX)
         val normalY = eq(hitY, bounds.minY, bounds.maxY)
         val normalZ = eq(hitZ, bounds.minZ, bounds.maxZ)
-        return dst.set(hitX, hitY, hitZ, normalX, normalY, normalZ)
+        val count = (abs(normalX) + abs(normalY) + abs(normalZ)).toInt()
+        if (count == 0) return null
+
+        val normalizer = divisor[count]
+        return dst.set(hitX, hitY, hitZ, normalX * normalizer, normalY * normalizer, normalZ * normalizer)
     }
 
     private fun AABBf.raycastFromInside(
@@ -41,17 +53,22 @@ class BoundaryBullet(val bounds: AABBf) : BulletCollisionWorld {
         margin: Float,
     ): Float {
         val sx0 = (minX - margin - px) * invDx
-        val sy0 = (minY - margin - py) * invDy
-        val sz0 = (minZ - margin - pz) * invDz
         val sx1 = (maxX + margin - px) * invDx
+
+        val sy0 = (minY - margin - py) * invDy
         val sy1 = (maxY + margin - py) * invDy
+
+        val sz0 = (minZ - margin - pz) * invDz
         val sz1 = (maxZ + margin - pz) * invDz
+
         val nearX = min(sx0, sx1)
-        val farX = max(sx0, sx1)
         val nearY = min(sy0, sy1)
-        val farY = max(sy0, sy1)
         val nearZ = min(sz0, sz1)
+
+        val farX = max(sx0, sx1)
+        val farY = max(sy0, sy1)
         val farZ = max(sz0, sz1)
+
         val far = min(farX, min(farY, farZ))
         val near = max(nearX, max(nearY, nearZ))
         return if (far >= near) far else Float.POSITIVE_INFINITY

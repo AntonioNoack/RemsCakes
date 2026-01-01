@@ -15,19 +15,15 @@ import org.joml.AABBf
 import kotlin.math.cos
 import kotlin.math.sin
 
-fun main() {
+class SalamiStack(numSlices: Int) {
 
     val bounds = AABBf(-2f, 0f, -2f, 2f, 10f, 2f)
 
-    val numSlices = 7
     val particles = ParticleSet(7 * numSlices)
     val constraints = ArrayList<ParticleConstraint>()
 
     val sliceRadius = 0.3f
     val pointRadius = sliceRadius * 0.48f
-
-    particles.invMass.fill(1f)
-    particles.radius.fill(pointRadius)
 
     fun defineSalami(di: Int) {
         val sliceY = pointRadius * 3f + di * 0.1f
@@ -44,7 +40,7 @@ fun main() {
 
         fun line(i: Int, j: Int) {
             // add length constraint
-            constraints.add(SpringConstraint(di + i, di + j, sliceRadius, 2f, 1f))
+            constraints.add(SpringConstraint(di + i, di + j, sliceRadius, 0.2f, 1f))
         }
 
         for (i in 0 until 6) {
@@ -60,12 +56,16 @@ fun main() {
             val i0 = i
             val i1 = di + 6
             val i2 = i + 3
-            constraints.add(BendingConstraint(i0, i1, i2, 1f, 1f))
+            constraints.add(BendingConstraint(i0, i1, i2, 0.1f, 1f))
         }
     }
 
-    for (i in 0 until numSlices) {
-        defineSalami(i * 7)
+    init {
+        particles.invMass.fill(1f)
+        particles.radius.fill(pointRadius)
+        for (i in 0 until numSlices) {
+            defineSalami(i * 7)
+        }
     }
 
     val solver = ParticleSolver(
@@ -76,8 +76,12 @@ fun main() {
         ParticleSolverConfig(10)
     )
 
+}
+
+fun main() {
+    val ss = SalamiStack(7)
     val scene = Entity()
-        .add(SphereParticleRenderer(particles, emptyList()))
-        .add(ParticlePhysics(solver, 1f / 60f))
+        .add(SphereParticleRenderer(ss.particles, emptyList()))
+        .add(ParticlePhysics(ss.solver, 1f / 60f))
     testSceneWithUI("SandPileTest", scene)
 }

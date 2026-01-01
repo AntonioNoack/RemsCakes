@@ -16,10 +16,10 @@ import org.joml.AABBf
 
 fun main() {
 
-    val s = 0.2f
+    val s = 2f
     val bounds = AABBf(-s, 0f, -s, s, 2f, s)
 
-    val preset = MaterialPreset.DOUGH
+    val preset = MaterialPreset.DRY_SAND
     val particles = createParticleCloud(10_000, bounds)
 
     particles.staticFriction.fill(preset.staticFriction)
