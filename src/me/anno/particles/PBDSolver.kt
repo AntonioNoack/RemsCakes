@@ -4,7 +4,7 @@ import kotlin.math.sqrt
 
 class PBDSolver(
     private val particles: ParticleSet,
-    private val constraints: MutableList<PBDConstraint>,
+    private val constraints: List<PBDConstraint>,
     private val contactSolver: ParticleContactSolver,
     private val rigidContacts: ParticleRigidContactSolver,
     private val config: PBDSolverConfig

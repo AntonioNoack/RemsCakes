@@ -175,8 +175,7 @@ class SimulationTests {
         )
 
         val solver = PBDSolver(
-            particles,
-            ArrayList(),
+            particles, emptyList(),
             ParticleContactSolver(particles, SpatialHashGrid(0.2f)),
             ParticleRigidContactSolver(particles, bullet),
             PBDSolverConfig()

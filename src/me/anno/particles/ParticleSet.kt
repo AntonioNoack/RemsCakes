@@ -90,4 +90,26 @@ class ParticleSet(
     private fun copyInto(src: FloatArray, dst: FloatArray, size: Int) {
         src.copyInto(dst, 0, 0, size)
     }
+
+    companion object {
+        fun mergeParticles(vararg sets: ParticleSet): ParticleSet {
+            val total = sets.sumOf { it.size }
+            val merged = ParticleSet(total)
+            var idx = 0
+            for (set in sets) {
+                for (i in 0 until set.size) {
+                    merged.px[idx] = set.px[i]
+                    merged.py[idx] = set.py[i]
+                    merged.pz[idx] = set.pz[i]
+                    merged.vx[idx] = set.vx[i]
+                    merged.vy[idx] = set.vy[i]
+                    merged.vz[idx] = set.vz[i]
+                    merged.invMass[idx] = set.invMass[i]
+                    merged.radius[idx] = set.radius[i]
+                    idx++
+                }
+            }
+            return merged
+        }
+    }
 }
