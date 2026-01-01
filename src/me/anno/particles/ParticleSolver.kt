@@ -3,6 +3,7 @@ package me.anno.particles
 import me.anno.particles.constraints.ParticleConstraint
 import me.anno.particles.constraints.ParticleContactSolver
 import me.anno.particles.constraints.ParticleRigidContactSolver
+import java.util.Random
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
