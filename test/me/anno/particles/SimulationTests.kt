@@ -195,6 +195,4 @@ class SimulationTests {
             "Resting particle should not sink or drift"
         )
     }
-
-
 }

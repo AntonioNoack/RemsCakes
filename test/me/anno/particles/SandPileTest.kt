@@ -5,9 +5,13 @@ import me.anno.engine.ui.render.SceneView.Companion.testSceneWithUI
 import me.anno.particles.broadphase.SparseParticleGrid
 import me.anno.particles.utils.BoundaryBullet
 import me.anno.particles.utils.ParticlePhysics
-import me.anno.particles.utils.PointParticleRenderer
+import me.anno.particles.utils.SphereParticleRenderer
+import org.joml.AABBf
 
 fun main() {
+
+    val s = 0.2f
+    val bounds = AABBf(-s, 0f, -s, s, 2f, s)
 
     val preset = MaterialPreset.DOUGH
     val particles = createParticleCloud(10_000, bounds)
@@ -26,11 +30,14 @@ fun main() {
         ArrayList(),
         contactSolver,
         rigidSolver,
-        PBDSolverConfig(solverIterations = 20)
+        PBDSolverConfig(solverIterations = 5)
     )
 
+    // val renderer = PointParticleRenderer(particles)
+    val renderer = SphereParticleRenderer(particles,emptyList())
+
     val scene = Entity()
-        .add(PointParticleRenderer(particles))
+        .add(renderer)
         .add(ParticlePhysics(solver, 1f / 60f))
     testSceneWithUI("SandPileTest", scene)
 

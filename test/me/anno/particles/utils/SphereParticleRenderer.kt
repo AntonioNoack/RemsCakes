@@ -18,6 +18,7 @@ class SphereParticleRenderer(
 ) : MeshSpawner() {
 
     private val mesh = IcosahedronModel.createIcosphere(0)
+    private val material = Material().apply { translucency = 1f }
 
     override fun fillSpace(globalTransform: Matrix4x3, dstUnion: AABBd) {
         fillAllSpace(dstUnion)
@@ -35,7 +36,7 @@ class SphereParticleRenderer(
             i = range.until
         }
         if (i < particles.size) {
-            val dst = callback(mesh, null)
+            val dst = callback(mesh, material)
             push(dst, i, particles.size)
         }
         return true
@@ -43,6 +44,7 @@ class SphereParticleRenderer(
 
     private fun push(dst: FloatArrayList, i0: Int, i1: Int) {
         for (i in i0 until i1) {
+            // todo we could interpolate position and previous position for a smoother simulation
             dst.add(particles.px[i], particles.py[i], particles.pz[i], particles.radius[i])
             dst.add(0f, 0f, 0f, 1f)
         }
