@@ -66,7 +66,7 @@ class ParticleRigidContactSolver(
             // println("Penetration[$px,$py,$pz -> $tx,$ty,$tz]: $penetration0 x $radius -> $penetration, Hit: $hit")
             if (penetration >= 0f) continue
 
-            val correction = penetration * dt * stiffness
+            val correction = penetration * stiffness
             // println("Delta: ${-correction * ny}")
 
             particles.addT(i, nx, ny, nz, -correction)

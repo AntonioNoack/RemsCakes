@@ -42,17 +42,12 @@ class ParticleContactSolver(
     private fun solveContact(i: Int, j: Int) {
         numClose++
 
-        val xi = particles.tx[i]
-        val yi = particles.ty[i]
-        val zi = particles.tz[i]
-        val ri = particles.radius[i]
-
-        val dx = particles.tx[j] - xi
-        val dy = particles.ty[j] - yi
-        val dz = particles.tz[j] - zi
+        val dx = particles.tx[j] - particles.tx[i]
+        val dy = particles.ty[j] - particles.ty[i]
+        val dz = particles.tz[j] - particles.tz[i]
 
         val distSq = dx * dx + dy * dy + dz * dz
-        val minDist = ri + particles.radius[j]
+        val minDist = particles.radius[i] + particles.radius[j]
 
         if (distSq >= minDist * minDist || distSq == 0f) return
 
