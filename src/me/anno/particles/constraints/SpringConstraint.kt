@@ -1,17 +1,19 @@
 package me.anno.particles.constraints
 
-import me.anno.maths.Maths.clamp
 import me.anno.particles.ParticleSet
+import me.anno.particles.constraints.ParticleConstraint.Companion.addT
+import kotlin.math.abs
 import kotlin.math.sqrt
 
 class SpringConstraint(
     private val i: Int,
     private val j: Int,
     private val restLength: Float,
-    private val stiffness: Float = 1.0f
+    private val stiffness: Float,
+    private val breakingDiff: Float,
 ) : ParticleConstraint {
 
-    override fun solve(p: ParticleSet, dt: Float) {
+    override fun solve(p: ParticleSet, dt: Float): Boolean {
         val ix = p.tx[i]
         val iy = p.ty[i]
         val iz = p.tz[i]
@@ -25,31 +27,22 @@ class SpringConstraint(
         val dz = jz - iz
 
         val distSq = dx * dx + dy * dy + dz * dz
-        if (distSq < 1e-10f) return
+        if (distSq < 1e-10f) return false
 
         val dist = sqrt(distSq)
-        val diff = (dist - restLength) / dist
+        val diffLen = dist - restLength
+        if (abs(diffLen) >= breakingDiff) return true
 
-        var w1 = p.invMass[i]
-        var w2 = p.invMass[j]
+        val diffRel = diffLen / dist
+
+        val w1 = p.invMass[i]
+        val w2 = p.invMass[j]
         val wSum = w1 + w2
-        if (wSum == 0f) return
+        if (wSum == 0f) return false
 
-        val corr = clamp(stiffness * dt * diff, -0.25f, 0.25f)
-
-        val cx = dx * corr
-        val cy = dy * corr
-        val cz = dz * corr
-
-        w1 /= wSum
-        w2 /= wSum
-
-        p.tx[i] += cx * w1
-        p.ty[i] += cy * w1
-        p.tz[i] += cz * w1
-
-        p.tx[j] -= cx * w2
-        p.ty[j] -= cy * w2
-        p.tz[j] -= cz * w2
+        val corr = stiffness * dt * diffRel / wSum
+        p.addT(i, dx, dy, dz, +w1 * corr)
+        p.addT(j, dx, dy, dz, -w2 * corr)
+        return false
     }
 }

@@ -1,16 +1,20 @@
 package me.anno.particles.constraints
 
-import me.anno.maths.Maths.clamp
+import me.anno.maths.Maths.sq
 import me.anno.particles.ParticleSet
+import me.anno.particles.constraints.ParticleConstraint.Companion.addT
 
 class BendingConstraint(
     private val i0: Int,
     private val i1: Int,
     private val i2: Int,
-    private val stiffness: Float
+    private val stiffness: Float,
+    breakingDiff: Float
 ) : ParticleConstraint {
 
-    override fun solve(p: ParticleSet, dt: Float) {
+    private val breakingDiffSq = sq(breakingDiff)
+
+    override fun solve(p: ParticleSet, dt: Float): Boolean {
         val x0 = p.tx[i0]
         val y0 = p.ty[i0]
         val z0 = p.tz[i0]
@@ -37,26 +41,17 @@ class BendingConstraint(
         val w2 = p.invMass[i2]
 
         val wSum = w0 * 0.25f + w1 + w2 * 0.25f
-        if (wSum == 0f) return
+        if (wSum == 0f) return false
 
-        val corr = clamp(stiffness / wSum * dt, -1f, 1f)
+        val corr = stiffness / wSum * dt
+        if (sq(dx, dy, dz) >= breakingDiffSq) return true
 
         // Middle particle gets full correction
-        p.tx[i1] -= dx * corr * w1
-        p.ty[i1] -= dy * corr * w1
-        p.tz[i1] -= dz * corr * w1
+        p.addT(i1, dx, dy, dz, -corr * w1)
 
         // Neighbors get half correction
-        val hx = dx * 0.5f * corr
-        val hy = dy * 0.5f * corr
-        val hz = dz * 0.5f * corr
-
-        p.tx[i0] += hx * w0
-        p.ty[i0] += hy * w0
-        p.tz[i0] += hz * w0
-
-        p.tx[i2] += hx * w2
-        p.ty[i2] += hy * w2
-        p.tz[i2] += hz * w2
+        p.addT(i0, dx, dy, dz, 0.5f * corr * w0)
+        p.addT(i2, dx, dy, dz, 0.5f * corr * w2)
+        return false
     }
 }

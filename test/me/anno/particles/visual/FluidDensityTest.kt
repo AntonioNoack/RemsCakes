@@ -9,6 +9,16 @@ import me.anno.particles.utils.MaterialRange
 import me.anno.particles.utils.ParticlePhysics
 import me.anno.particles.utils.SphereParticleRenderer
 
+// todo for fluid rendering,
+//  enter the fluid density into a grid,
+//  blur the grid,
+//  calculate marching cubes
+
+// todo for finding connected puddles,
+//  union-find algorithm,
+//  AABB around each puddle,
+//  and then marching cubes
+
 fun main() {
     val helper = FluidSimulationTests()
     val light = helper.createFluidParticles(100, density = 1.0f)

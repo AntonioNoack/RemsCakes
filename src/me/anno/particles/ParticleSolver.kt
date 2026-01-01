@@ -10,7 +10,7 @@ import kotlin.math.sqrt
 
 class ParticleSolver(
     private val particles: ParticleSet,
-    private val constraints: List<ParticleConstraint>,
+    private val constraints: MutableList<ParticleConstraint>,
     private val contactSolver: ParticleContactSolver,
     private val rigidContacts: ParticleRigidContactSolver,
     private val config: ParticleSolverConfig
@@ -69,8 +69,7 @@ class ParticleSolver(
 
     private fun solveConstraints(dt: Float) {
         repeat(config.solverIterations) {
-            for (c in constraints) c.solve(particles, dt)
-
+            constraints.removeIf { it.solve(particles, dt) }
             contactSolver.solveContacts()
             rigidContacts.solveContacts()
         }

@@ -10,7 +10,7 @@ import me.anno.particles.utils.SphereParticleRenderer
 
 fun createBendingConstraints(particles: ParticleSet): List<BendingConstraint> {
     return List(particles.size - 2) { i0 ->
-        BendingConstraint(i0, i0 + 1, i0 + 2, 60f)
+        BendingConstraint(i0, i0 + 1, i0 + 2, 60f, 0.05f)
     }
 }
 

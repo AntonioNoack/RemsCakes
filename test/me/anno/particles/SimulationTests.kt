@@ -178,7 +178,7 @@ class SimulationTests {
         )
 
         val solver = ParticleSolver(
-            particles, emptyList(),
+            particles, ArrayList(),
             ParticleContactSolver(particles, SparseParticleGrid(0.2f)),
             ParticleRigidContactSolver(particles, bullet),
             ParticleSolverConfig()

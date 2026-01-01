@@ -43,19 +43,19 @@ class NoodleSimulationTests {
         }
 
         for (i in 0 until particleCount - 1) {
-            constraints += SpringConstraint(i, i + 1, segmentLength, stiffness)
+            constraints += SpringConstraint(
+                i, i + 1, segmentLength, stiffness,
+                segmentLength
+            )
         }
 
         return p to constraints
     }
 
-    fun createSolver(
-        particles: ParticleSet,
-        springs: List<ParticleConstraint>,
-    ): ParticleSolver {
+    fun createSolver(particles: ParticleSet, constraints: List<ParticleConstraint>): ParticleSolver {
         return ParticleSolver(
             particles = particles,
-            constraints = springs,
+            constraints = ArrayList(constraints),
             ParticleContactSolver(particles, SparseParticleGrid(0.07f)),
             ParticleRigidContactSolver(particles, BoundaryBullet(bounds)),
             config = ParticleSolverConfig(
@@ -160,10 +160,10 @@ class NoodleSimulationTests {
             stiffness = 30.0f
         )
 
-        val constraints = springs + (1 until particles.size - 1).map { i ->
+        val constraints = springs + List(particles.size - 2) { i ->
             BendingConstraint(
-                i - 1, i, i + 1,
-                stiffness = 0.9f * 60f
+                i, i + 1, i + 2,
+                stiffness = 0.9f * 60f, 1f
             )
         }
 
