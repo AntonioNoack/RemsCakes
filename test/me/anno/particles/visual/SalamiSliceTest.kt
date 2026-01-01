@@ -17,32 +17,30 @@ import kotlin.math.sin
 
 fun main() {
 
-    // todo why is this soo extremely unstable???
+    val bounds = AABBf(-2f, 0f, -2f, 2f, 10f, 2f)
 
-    val bounds = AABBf(-2f, 0f, -2f, 2f, 2f, 2f)
-
-    val numSlices = 3
+    val numSlices = 7
     val particles = ParticleSet(7 * numSlices)
     val constraints = ArrayList<ParticleConstraint>()
 
     val sliceRadius = 0.3f
     val pointRadius = sliceRadius * 0.48f
 
+    particles.invMass.fill(1f)
+    particles.radius.fill(pointRadius)
+
     fun defineSalami(di: Int) {
+        val sliceY = pointRadius * 3f + di * 0.1f
         for (i in 0 until 6) {
-            val angle = (di + i) * TAUf / 6
+            val angle = (di.and(1) * 0.5f + i) * TAUf / 6
             particles.px[di + i] = cos(angle) * sliceRadius
-            particles.py[di + i] = pointRadius * 3f + di * 0.1f
+            particles.py[di + i] = sliceY
             particles.pz[di + i] = sin(angle) * sliceRadius
-            particles.radius[di + i] = pointRadius
-            particles.invMass[di + i] = 1f
         }
 
         particles.px[di + 6] = 0f
-        particles.py[di + 6] = 2f
+        particles.py[di + 6] = sliceY
         particles.pz[di + 6] = 0f
-        particles.radius[di + 6] = pointRadius
-        particles.invMass[di + 6] = 1f
 
         fun line(i: Int, j: Int) {
             // add length constraint
@@ -73,7 +71,7 @@ fun main() {
     val solver = ParticleSolver(
         particles,
         constraints,
-        ParticleContactSolver(particles, SparseParticleGrid(pointRadius)),
+        ParticleContactSolver(particles, SparseParticleGrid(2f * pointRadius)),
         ParticleRigidContactSolver(particles, BoundaryBullet(bounds)),
         ParticleSolverConfig(10)
     )

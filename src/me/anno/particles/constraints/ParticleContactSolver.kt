@@ -3,6 +3,7 @@ package me.anno.particles.constraints
 import me.anno.particles.CohesionBond
 import me.anno.particles.ParticleSet
 import me.anno.particles.broadphase.ParticleBroadphase
+import me.anno.particles.constraints.ParticleConstraint.Companion.addT
 import kotlin.math.sqrt
 
 /**
@@ -11,7 +12,7 @@ import kotlin.math.sqrt
 class ParticleContactSolver(
     private val particles: ParticleSet,
     private val grid: ParticleBroadphase,
-    private val stiffness: Float = 1.0f
+    private val stiffness: Float = 1f
 ) {
 
     var numClose = 0
@@ -70,19 +71,10 @@ class ParticleContactSolver(
         val invW = 1f / wSum
 
         numHit++
-        val correction = penetration * stiffness
 
-        val cx = nx * correction * invW
-        val cy = ny * correction * invW
-        val cz = nz * correction * invW
-
-        particles.tx[i] -= cx * w1
-        particles.ty[i] -= cy * w1
-        particles.tz[i] -= cz * w1
-
-        particles.tx[j] += cx * w2
-        particles.ty[j] += cy * w2
-        particles.tz[j] += cz * w2
+        val correction = penetration * stiffness * invW
+        particles.addT(i, nx, ny, nz, -w1 * correction)
+        particles.addT(j, nx, ny, nz, +w2 * correction)
 
         if (particles.cohesion[i] > 0f || particles.cohesion[j] > 0f) {
             particles.cohesionBonds.add(CohesionBond(i, j))

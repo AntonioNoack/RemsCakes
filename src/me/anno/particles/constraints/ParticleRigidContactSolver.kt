@@ -3,6 +3,7 @@ package me.anno.particles.constraints
 import me.anno.particles.BulletCollisionWorld
 import me.anno.particles.ParticleSet
 import me.anno.particles.RaycastHit
+import me.anno.particles.constraints.ParticleConstraint.Companion.addT
 import kotlin.math.sqrt
 
 class ParticleRigidContactSolver(
@@ -13,7 +14,7 @@ class ParticleRigidContactSolver(
 
     private val dst = RaycastHit(0f, 0f, 0f, 0f, 0f, 0f)
 
-    fun solveContacts() {
+    fun solveContacts(dt: Float) {
         for (i in 0 until particles.size) {
             if (particles.invMass[i] == 0f) continue
 
@@ -65,12 +66,10 @@ class ParticleRigidContactSolver(
             // println("Penetration[$px,$py,$pz -> $tx,$ty,$tz]: $penetration0 x $radius -> $penetration, Hit: $hit")
             if (penetration >= 0f) continue
 
-            val correction = penetration * stiffness
+            val correction = penetration * dt * stiffness
             // println("Delta: ${-correction * ny}")
 
-            particles.tx[i] -= nx * correction
-            particles.ty[i] -= ny * correction
-            particles.tz[i] -= nz * correction
+            particles.addT(i, nx, ny, nz, -correction)
 
             // TODO: tangential friction against rigid body
             // TODO: rolling resistance

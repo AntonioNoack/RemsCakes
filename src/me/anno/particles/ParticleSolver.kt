@@ -72,7 +72,7 @@ class ParticleSolver(
         repeat(config.solverIterations) {
             constraints.removeIf { it.solve(particles, dt) }
             contactSolver.solveContacts()
-            rigidContacts.solveContacts()
+            rigidContacts.solveContacts(dt)
         }
     }
 
