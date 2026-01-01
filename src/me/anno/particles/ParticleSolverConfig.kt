@@ -1,6 +1,6 @@
 package me.anno.particles
 
-data class PBDSolverConfig(
+data class ParticleSolverConfig(
     val substeps: Int = 1,
     val solverIterations: Int = 5,
     val gravityX: Float = 0f,

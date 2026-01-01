@@ -1,26 +1,29 @@
 package me.anno.particles
 
+import me.anno.particles.constraints.ParticleConstraint
+import me.anno.particles.constraints.ParticleContactSolver
+import me.anno.particles.constraints.ParticleRigidContactSolver
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
 
-class PBDSolver(
+class ParticleSolver(
     private val particles: ParticleSet,
-    private val constraints: List<PBDConstraint>,
+    private val constraints: List<ParticleConstraint>,
     private val contactSolver: ParticleContactSolver,
     private val rigidContacts: ParticleRigidContactSolver,
-    private val config: PBDSolverConfig
+    private val config: ParticleSolverConfig
 ) {
 
     fun step(dt: Float) {
-        val h = dt / config.substeps
+        val dtSubStep = dt / config.substeps
 
         repeat(config.substeps) {
-            applyExternalForces(h)
-            predictPositions(h)
-            solveConstraints()
-            updateVelocities(h)
+            applyExternalForces(dtSubStep)
+            predictPositions(dtSubStep)
+            solveConstraints(dtSubStep)
+            updateVelocities(dtSubStep)
         }
     }
 
@@ -64,9 +67,9 @@ class PBDSolver(
         }
     }
 
-    private fun solveConstraints() {
+    private fun solveConstraints(dt: Float) {
         repeat(config.solverIterations) {
-            for (c in constraints) c.solve(particles)
+            for (c in constraints) c.solve(particles, dt)
 
             contactSolver.solveContacts()
             rigidContacts.solveContacts()

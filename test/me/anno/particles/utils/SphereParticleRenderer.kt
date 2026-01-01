@@ -47,6 +47,8 @@ class SphereParticleRenderer(
             // todo we could interpolate position and previous position for a smoother simulation
             dst.add(particles.px[i], particles.py[i], particles.pz[i], particles.radius[i])
             dst.add(0f, 0f, 0f, 1f)
+
+            // println(listOf(particles.px[i], particles.py[i], particles.pz[i]))
         }
     }
 

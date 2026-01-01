@@ -1,6 +1,8 @@
 package me.anno.particles
 
 import me.anno.particles.broadphase.SparseParticleGrid
+import me.anno.particles.constraints.ParticleContactSolver
+import me.anno.particles.constraints.ParticleRigidContactSolver
 import me.anno.particles.utils.BoundaryBullet
 import org.joml.AABBf
 import org.junit.jupiter.api.Assertions.*
@@ -21,7 +23,7 @@ class SimulationTests {
             AABBf(-10f, -10f, -10f, 10f, 10f, 10f)
         )
 
-        val solver = PBDSolver(
+        val solver = ParticleSolver(
             particles,
             ArrayList(),
             ParticleContactSolver(
@@ -32,7 +34,7 @@ class SimulationTests {
                 particles,
                 bullet
             ),
-            PBDSolverConfig()
+            ParticleSolverConfig()
         )
 
         solver.step(1f / 60f)
@@ -55,12 +57,12 @@ class SimulationTests {
         val bounds = AABBf(-1f, 0f, -1f, 1f, 1f, 1f)
         val bullet = BoundaryBullet(bounds)
 
-        val solver = PBDSolver(
+        val solver = ParticleSolver(
             particles,
             ArrayList(),
             ParticleContactSolver(particles, SparseParticleGrid(0.2f)),
             ParticleRigidContactSolver(particles, bullet),
-            PBDSolverConfig(solverIterations = 8)
+            ParticleSolverConfig(solverIterations = 8)
         )
 
         repeat(120) {
@@ -88,12 +90,12 @@ class SimulationTests {
         val bounds = AABBf(-1f, -1f, -1f, 1f, 1f, 1f)
         val bullet = BoundaryBullet(bounds)
 
-        val solver = PBDSolver(
+        val solver = ParticleSolver(
             particles,
             ArrayList(),
             ParticleContactSolver(particles, SparseParticleGrid(0.2f)),
             ParticleRigidContactSolver(particles, bullet),
-            PBDSolverConfig()
+            ParticleSolverConfig()
         )
 
         repeat(300) {
@@ -133,7 +135,7 @@ class SimulationTests {
         particles.radius[0] = 0.05f
         particles.radius[1] = 0.05f
 
-        val solver = PBDSolver(
+        val solver = ParticleSolver(
             particles,
             ArrayList(),
             ParticleContactSolver(
@@ -144,7 +146,7 @@ class SimulationTests {
                 particles,
                 BoundaryBullet(AABBf(-1f, -1f, -1f, 1f, 1f, 1f))
             ),
-            PBDSolverConfig(solverIterations = 5)
+            ParticleSolverConfig(solverIterations = 5)
         )
 
         repeat(60) {
@@ -175,11 +177,11 @@ class SimulationTests {
             AABBf(-1f, 0f, -1f, 1f, 1f, 1f)
         )
 
-        val solver = PBDSolver(
+        val solver = ParticleSolver(
             particles, emptyList(),
             ParticleContactSolver(particles, SparseParticleGrid(0.2f)),
             ParticleRigidContactSolver(particles, bullet),
-            PBDSolverConfig()
+            ParticleSolverConfig()
         )
 
         // println("y[0]: ${particles.py[0]}")

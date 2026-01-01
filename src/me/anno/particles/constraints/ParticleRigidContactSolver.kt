@@ -1,5 +1,8 @@
-package me.anno.particles
+package me.anno.particles.constraints
 
+import me.anno.particles.BulletCollisionWorld
+import me.anno.particles.ParticleSet
+import me.anno.particles.RaycastHit
 import kotlin.math.sqrt
 
 class ParticleRigidContactSolver(

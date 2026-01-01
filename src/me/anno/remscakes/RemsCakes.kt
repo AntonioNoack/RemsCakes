@@ -17,4 +17,13 @@ package me.anno.remscakes
 //  and we calculate calories, far percentage etc
 //  and we combine it with Bullet physics
 
+// todo we need recipe mixing...
+//  upto four components per particle???
+//  mix color/physics separate from components???
+
+// todo first-person player
+// todo player can grab stuff
+// todo player can throw things, let them fall
+// todo player is in a relatively simple environment
+
 fun main() {}

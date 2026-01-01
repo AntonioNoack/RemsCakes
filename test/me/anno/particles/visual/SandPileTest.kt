@@ -1,8 +1,14 @@
-package me.anno.particles
+package me.anno.particles.visual
 
 import me.anno.ecs.Entity
 import me.anno.engine.ui.render.SceneView.Companion.testSceneWithUI
+import me.anno.particles.MaterialPreset
+import me.anno.particles.ParticleSolver
+import me.anno.particles.ParticleSolverConfig
 import me.anno.particles.broadphase.SparseParticleGrid
+import me.anno.particles.constraints.ParticleContactSolver
+import me.anno.particles.constraints.ParticleRigidContactSolver
+import me.anno.particles.createParticleCloud
 import me.anno.particles.utils.BoundaryBullet
 import me.anno.particles.utils.ParticlePhysics
 import me.anno.particles.utils.SphereParticleRenderer
@@ -25,12 +31,12 @@ fun main() {
     val bullet = BoundaryBullet(bounds)
     val rigidSolver = ParticleRigidContactSolver(particles, bullet)
 
-    val solver = PBDSolver(
+    val solver = ParticleSolver(
         particles,
         ArrayList(),
         contactSolver,
         rigidSolver,
-        PBDSolverConfig(solverIterations = 5)
+        ParticleSolverConfig(solverIterations = 5)
     )
 
     // val renderer = PointParticleRenderer(particles)

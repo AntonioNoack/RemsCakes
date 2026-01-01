@@ -1,8 +1,9 @@
-package me.anno.particles
+package me.anno.particles.visual
 
 import me.anno.ecs.Entity
 import me.anno.ecs.components.mesh.material.Material
 import me.anno.engine.ui.render.SceneView.Companion.testSceneWithUI
+import me.anno.particles.FluidSimulationTests
 import me.anno.particles.ParticleSet.Companion.mergeParticles
 import me.anno.particles.utils.MaterialRange
 import me.anno.particles.utils.ParticlePhysics

@@ -1,5 +1,7 @@
-package me.anno.particles
+package me.anno.particles.constraints
 
+import me.anno.maths.Maths.clamp
+import me.anno.particles.ParticleSet
 import kotlin.math.sqrt
 
 class SpringConstraint(
@@ -7,9 +9,9 @@ class SpringConstraint(
     private val j: Int,
     private val restLength: Float,
     private val stiffness: Float = 1.0f
-) : PBDConstraint {
+) : ParticleConstraint {
 
-    override fun solve(p: ParticleSet) {
+    override fun solve(p: ParticleSet, dt: Float) {
         val ix = p.tx[i]
         val iy = p.ty[i]
         val iz = p.tz[i]
@@ -23,7 +25,7 @@ class SpringConstraint(
         val dz = jz - iz
 
         val distSq = dx * dx + dy * dy + dz * dz
-        if (distSq == 0f) return
+        if (distSq < 1e-10f) return
 
         val dist = sqrt(distSq)
         val diff = (dist - restLength) / dist
@@ -33,7 +35,7 @@ class SpringConstraint(
         val wSum = w1 + w2
         if (wSum == 0f) return
 
-        val corr = stiffness * diff
+        val corr = clamp(stiffness * dt * diff, -0.25f, 0.25f)
 
         val cx = dx * corr
         val cy = dy * corr

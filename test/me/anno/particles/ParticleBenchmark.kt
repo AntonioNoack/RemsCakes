@@ -2,6 +2,8 @@ package me.anno.particles
 
 import me.anno.maths.Maths.clamp
 import me.anno.particles.broadphase.SparseParticleGrid
+import me.anno.particles.constraints.ParticleContactSolver
+import me.anno.particles.constraints.ParticleRigidContactSolver
 import me.anno.particles.utils.BoundaryBullet
 import me.anno.utils.Clock
 import org.joml.AABBf
@@ -51,12 +53,12 @@ fun main() {
         val bullet = BoundaryBullet(bounds)
         val rigidSolver = ParticleRigidContactSolver(particles, bullet)
 
-        val solver = PBDSolver(
+        val solver = ParticleSolver(
             particles,
             ArrayList(),
             contactSolver,
             rigidSolver,
-            PBDSolverConfig(solverIterations = 8)
+            ParticleSolverConfig(solverIterations = 8)
         )
 
         clock.benchmark(1, 10, size, "Solver[$size].step()") {

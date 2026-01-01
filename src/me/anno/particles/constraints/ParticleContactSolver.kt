@@ -1,5 +1,7 @@
-package me.anno.particles
+package me.anno.particles.constraints
 
+import me.anno.particles.CohesionBond
+import me.anno.particles.ParticleSet
 import me.anno.particles.broadphase.ParticleBroadphase
 import kotlin.math.sqrt
 
