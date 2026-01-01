@@ -79,6 +79,7 @@ class SalamiStack(numSlices: Int) {
 }
 
 fun main() {
+    // todo create and deform proper salami meshes
     val ss = SalamiStack(7)
     val scene = Entity()
         .add(SphereParticleRenderer(ss.particles, emptyList()))
