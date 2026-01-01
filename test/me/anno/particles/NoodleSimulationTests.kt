@@ -1,8 +1,12 @@
 package me.anno.particles
 
+import me.anno.ecs.Entity
+import me.anno.engine.ui.render.SceneView.Companion.testSceneWithUI
 import me.anno.particles.broadphase.SparseParticleGrid
 import me.anno.particles.constraints.*
 import me.anno.particles.utils.BoundaryBullet
+import me.anno.particles.utils.ParticlePhysics
+import me.anno.particles.utils.SphereParticleRenderer
 import me.anno.utils.assertions.assertEquals
 import me.anno.utils.assertions.assertTrue
 import org.joml.AABBf
@@ -45,7 +49,7 @@ class NoodleSimulationTests {
         for (i in 0 until particleCount - 1) {
             constraints += SpringConstraint(
                 i, i + 1, segmentLength, stiffness,
-                segmentLength
+                10f * segmentLength
             )
         }
 
@@ -58,7 +62,7 @@ class NoodleSimulationTests {
             constraints = ArrayList(constraints),
             ParticleContactSolver(particles, SparseParticleGrid(0.07f)),
             ParticleRigidContactSolver(particles, BoundaryBullet(bounds)),
-            config = ParticleSolverConfig(solverIterations = 10,)
+            config = ParticleSolverConfig(solverIterations = 10)
         )
     }
 
@@ -128,11 +132,24 @@ class NoodleSimulationTests {
 
     @Test
     fun `stiffer noodle bends less`() {
-        val (soft, softSprings) = createNoodle(10, 0.5f, stiffness = 0.3f)
-        val (stiff, stiffSprings) = createNoodle(10, 0.5f, stiffness = 1.0f)
+        val (soft, softSprings) = createNoodle(10, 0.5f, stiffness = 3f)
+        val (stiff, stiffSprings) = createNoodle(10, 0.5f, stiffness = 10f)
 
         val softSolver = createSolver(soft, softSprings)
         val stiffSolver = createSolver(stiff, stiffSprings)
+
+        if (false) {
+            val scene = Entity()
+            Entity("Soft", scene)
+                .setPosition(1.0, 0.0, 0.0)
+                .add(SphereParticleRenderer(soft, emptyList()))
+                .add(ParticlePhysics(softSolver, 1f / 60f))
+            Entity("Stiff", scene)
+                .setPosition(-1.0, 0.0, 0.0)
+                .add(SphereParticleRenderer(soft, emptyList()))
+                .add(ParticlePhysics(softSolver, 1f / 60f))
+            testSceneWithUI("SandPileTest", scene)
+        }
 
         repeat(300) {
             softSolver.step(1f / 60f)
