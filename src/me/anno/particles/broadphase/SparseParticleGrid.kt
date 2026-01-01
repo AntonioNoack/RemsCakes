@@ -1,10 +1,48 @@
-package me.anno.particles
+package me.anno.particles.broadphase
 
 import me.anno.utils.callbacks.I2U
 import me.anno.utils.structures.arrays.IntArrayList
 import kotlin.math.floor
 
-class SpatialHashGrid(cellSize: Float) {
+class SparseParticleGrid(cellSize: Float) : ParticleBroadphase {
+
+    companion object {
+
+        fun queryPairs(
+            cell: IntArrayList, other: IntArrayList, callback: I2U,
+            removeDuplicates: Boolean
+        ) {
+            if (cell === other) {
+                queryPairsSame(cell, callback)
+            } else {
+                queryPairsDiff(cell, other, callback, removeDuplicates)
+            }
+        }
+
+        fun queryPairsSame(cell: IntArrayList, callback: I2U) {
+            for (i in 1 until cell.size) {
+                val ci = cell[i]
+                for (j in 0 until i) {
+                    callback.call(ci, cell[j])
+                }
+            }
+        }
+
+        fun queryPairsDiff(
+            cell: IntArrayList, other: IntArrayList, callback: I2U,
+            removeDuplicates: Boolean
+        ) {
+            for (i in 0 until cell.size) {
+                for (j in 0 until other.size) {
+                    val ci = cell[i]
+                    val cj = other[j]
+                    if (!removeDuplicates || ci < cj) {
+                        callback.call(ci, cj)
+                    } // else would be handled twice...
+                }
+            }
+        }
+    }
 
     private class Cell(var xi: Int, var yi: Int, var zi: Int) {
         val points = IntArrayList(4)
@@ -21,12 +59,12 @@ class SpatialHashGrid(cellSize: Float) {
     //  so instead of rebuilding,
     //  we could also try to update them
 
-    fun clear() {
+    override fun clear() {
         pool.addAll(map.values)
         map.clear()
     }
 
-    fun insert(x: Float, y: Float, z: Float, index: Int) {
+    override fun insert(x: Float, y: Float, z: Float, index: Int) {
         val xi = floorDiv(x)
         val yi = floorDiv(y)
         val zi = floorDiv(z)
@@ -43,32 +81,15 @@ class SpatialHashGrid(cellSize: Float) {
         return oldCell
     }
 
-    fun queryPairs(callback: I2U) {
+    override fun queryPairs(callback: I2U) {
         for ((key0, cell) in map) {
             for (dx in -1..1) {
                 for (dy in -1..1) {
                     for (dz in -1..1) {
                         val key = hashCell(cell.xi + dx, cell.yi + dy, cell.zi + dz)
                         val other = if (key == key0) cell else map[key] ?: continue
-                        queryPairs(cell.points, other.points, callback)
+                        queryPairs(cell.points, other.points, callback, true)
                     }
-                }
-            }
-        }
-    }
-
-    private fun queryPairs(cell: IntArrayList, other: IntArrayList, callback: I2U) {
-        if (cell === other) {
-            for (i in 1 until cell.size) {
-                val ci = cell[i]
-                for (j in 0 until i) {
-                    callback.call(ci, cell[j])
-                }
-            }
-        } else {
-            for (i in 0 until cell.size) {
-                for (j in 0 until other.size) {
-                    callback.call(cell[i], other[j])
                 }
             }
         }

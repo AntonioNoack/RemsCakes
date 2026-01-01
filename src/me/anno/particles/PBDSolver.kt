@@ -1,5 +1,8 @@
 package me.anno.particles
 
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sqrt
 
 class PBDSolver(
@@ -75,8 +78,18 @@ class PBDSolver(
         particles.cohesionBonds.removeIf { bond ->
             applyCohesion(bond.i, bond.j)
         }
+        applyGlobalDamping()
         updateFinalPositions()
         clearTemporaryContactFlags()
+    }
+
+    private fun applyGlobalDamping() {
+        val damping = config.damping
+        for (i in 0 until particles.size) {
+            particles.vx[i] *= damping
+            particles.vy[i] *= damping
+            particles.vz[i] *= damping
+        }
     }
 
     private fun applyVelocityCorrections(dt: Float) {
@@ -110,14 +123,14 @@ class PBDSolver(
                 val muDynamic = particles.dynamicFriction[i]
 
                 // Static vs dynamic friction
-                if (tangentialSpeed < muStatic * kotlin.math.abs(vn + 1e-5f)) {
+                if (tangentialSpeed < muStatic * abs(vn + 1e-5f)) {
                     // Static friction: cancel tangential motion
                     vx -= tx
                     vy -= ty
                     vz -= tz
                 } else {
                     // Dynamic friction: damp tangential motion
-                    val scale = maxOf(0f, 1f - muDynamic)
+                    val scale = max(0f, 1f - muDynamic)
                     vx = nx * vn + tx * scale
                     vy = ny * vn + ty * scale
                     vz = nz * vn + tz * scale
@@ -155,40 +168,48 @@ class PBDSolver(
         val tz = vzRel - nz * vn
         val tangentialSpeed = sqrt(tx * tx + ty * ty + tz * tz)
 
-        val cohesionFriction = minOf(particles.cohesion[i], particles.cohesion[j])
+        val cohesionFriction = min(particles.cohesion[i], particles.cohesion[j])
+        // todo these should be per-material-pair
         val breakVelocity = 0.5f // tweak per material
-        val shearLimit = 0.5f    // tweak per material
+        val shearLimit = 0.5f // tweak per material
 
         // Damp relative tangential motion (preserves center-of-mass motion)
         if (tangentialSpeed > 1e-5f) {
-            val scale = maxOf(0f, 1f - cohesionFriction)
-            val dtx = tx * (1f - scale)
-            val dty = ty * (1f - scale)
-            val dtz = tz * (1f - scale)
-
-            particles.vx[i] += dtx * 0.5f
-            particles.vy[i] += dty * 0.5f
-            particles.vz[i] += dtz * 0.5f
-
-            particles.vx[j] -= dtx * 0.5f
-            particles.vy[j] -= dty * 0.5f
-            particles.vz[j] -= dtz * 0.5f
+            val scale = max(0f, 1f - cohesionFriction)
+            val factor = (1f - scale)
+            push(i, j, tx, ty, tz, factor)
         }
 
         // Resist separation only (velocity along normal)
         if (vn > 0f && cohesionFriction > 0f) {
-            val resist = minOf(vn, cohesionFriction)
-            val impulse = resist * 0.5f
-            particles.vx[i] += nx * impulse
-            particles.vy[i] += ny * impulse
-            particles.vz[i] += nz * impulse
-            particles.vx[j] -= nx * impulse
-            particles.vy[j] -= ny * impulse
-            particles.vz[j] -= nz * impulse
+            val resist = min(vn, cohesionFriction)
+            push(i, j, nx, ny, nz, resist)
         }
 
         // Break bond if exceeded thresholds
         return vn > breakVelocity || tangentialSpeed > shearLimit
+    }
+
+    private fun push(
+        i: Int, j: Int,
+        dtx: Float, dty: Float, dtz: Float,
+        factor: Float
+    ) {
+        val m1 = particles.invMass[i]
+        val m2 = particles.invMass[j]
+        // is this correct, or should we use 1/invMass?
+        // ratio stays the same, so both ways work
+        val scale = factor / (m1 + m2)
+        val s1 = m1 * scale
+        val s2 = m2 * scale
+
+        particles.vx[i] += dtx * s1
+        particles.vy[i] += dty * s1
+        particles.vz[i] += dtz * s1
+
+        particles.vx[j] -= dtx * s2
+        particles.vy[j] -= dty * s2
+        particles.vz[j] -= dtz * s2
     }
 
     private fun updateFinalPositions() {

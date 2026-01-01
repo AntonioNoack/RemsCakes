@@ -1,13 +1,12 @@
 package me.anno.particles
 
 import me.anno.ecs.Entity
-import me.anno.ecs.components.mesh.MeshAttributes.color0
+import me.anno.ecs.components.mesh.material.Material
 import me.anno.engine.ui.render.SceneView.Companion.testSceneWithUI
 import me.anno.particles.ParticleSet.Companion.mergeParticles
+import me.anno.particles.utils.MaterialRange
 import me.anno.particles.utils.ParticlePhysics
-import me.anno.particles.utils.PointParticleRenderer
-import me.anno.utils.Color
-import me.anno.utils.Color.withAlpha
+import me.anno.particles.utils.SphereParticleRenderer
 
 fun main() {
     val helper = FluidSimulationTests()
@@ -18,14 +17,20 @@ fun main() {
     val particles = mergeParticles(light, medium, heavy)
     val solver = helper.createFluidSolver(particles)
 
+    fun create(color: Int): Material {
+        return Material.diffuse(color)
+    }
+
+    val renderer = SphereParticleRenderer(
+        particles, listOf(
+            MaterialRange(light.size, create(0xffffff)),
+            MaterialRange(light.size + medium.size, create(0x777777)),
+            MaterialRange(particles.size, create(0x333333)),
+        )
+    )
+
     val scene = Entity()
-        .add(PointParticleRenderer(particles).apply {
-            mesh.color0 = IntArray(particles.size) {
-                if (it < light.size) Color.white
-                else if (it < light.size + medium.size) 0x777777.withAlpha(255)
-                else 0x333333.withAlpha(255)
-            }
-        })
+        .add(renderer)
         .add(ParticlePhysics(solver, 1f / 60f))
     testSceneWithUI("SandPileTest", scene)
 }

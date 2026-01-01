@@ -7,6 +7,8 @@
     <SOURCES>
       <root url="file://$PROJECT_DIR$/../RemsEngine/Bullet/src" />
       <root url="file://$PROJECT_DIR$/../RemsEngine/KOML/src" />
+      <root url="file://$PROJECT_DIR$/../RemsEngine/src" />
+      <root url="file://$PROJECT_DIR$/../RemsEngine/src" />
     </SOURCES>
   </library>
 </component>

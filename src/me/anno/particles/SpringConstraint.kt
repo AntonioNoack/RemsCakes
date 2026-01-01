@@ -1,6 +1,8 @@
 package me.anno.particles
 
-class DistanceConstraint(
+import kotlin.math.sqrt
+
+class SpringConstraint(
     private val i: Int,
     private val j: Int,
     private val restLength: Float,
@@ -23,7 +25,7 @@ class DistanceConstraint(
         val distSq = dx * dx + dy * dy + dz * dz
         if (distSq == 0f) return
 
-        val dist = kotlin.math.sqrt(distSq)
+        val dist = sqrt(distSq)
         val diff = (dist - restLength) / dist
 
         var w1 = p.invMass[i]

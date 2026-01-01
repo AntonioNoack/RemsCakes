@@ -2,9 +2,10 @@ package me.anno.particles
 
 import me.anno.ecs.Entity
 import me.anno.engine.ui.render.SceneView.Companion.testSceneWithUI
+import me.anno.particles.broadphase.SparseParticleGrid
 import me.anno.particles.utils.BoundaryBullet
 import me.anno.particles.utils.ParticlePhysics
-import me.anno.particles.utils.ParticleRenderer
+import me.anno.particles.utils.PointParticleRenderer
 
 fun main() {
 
@@ -15,7 +16,7 @@ fun main() {
     particles.dynamicFriction.fill(preset.dynamicFriction)
     particles.cohesion.fill(preset.cohesion)
 
-    val grid = SpatialHashGrid(cellSize = 0.03f)
+    val grid = SparseParticleGrid(cellSize = 0.03f)
     val contactSolver = ParticleContactSolver(particles, grid)
     val bullet = BoundaryBullet(bounds)
     val rigidSolver = ParticleRigidContactSolver(particles, bullet)
@@ -29,7 +30,7 @@ fun main() {
     )
 
     val scene = Entity()
-        .add(ParticleRenderer(particles))
+        .add(PointParticleRenderer(particles))
         .add(ParticlePhysics(solver, 1f / 60f))
     testSceneWithUI("SandPileTest", scene)
 

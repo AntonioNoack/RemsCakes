@@ -2,6 +2,7 @@ package me.anno.particles
 
 import me.anno.maths.Maths.mix
 import me.anno.particles.ParticleSet.Companion.mergeParticles
+import me.anno.particles.broadphase.DenseParticleGrid
 import me.anno.particles.utils.BoundaryBullet
 import org.joml.AABBf
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -13,7 +14,7 @@ class FluidSimulationTests {
     val radius = 0.3f
     val s = 3f
     val random = Random(1324)
-    val bounds = AABBf(-s, 0f, -s, s, 3f * s, s)
+    val bounds = AABBf(-s, 0f, -s, s, s * 3f, s)
 
     // --- Helper functions ---
     fun createFluidParticles(size: Int, density: Float = 1f): ParticleSet {
@@ -37,7 +38,7 @@ class FluidSimulationTests {
         return PBDSolver(
             particles,
             ArrayList(),
-            ParticleContactSolver(particles, SpatialHashGrid(radius * 1.4f)),
+            ParticleContactSolver(particles, DenseParticleGrid(radius * 1.4f, bounds)),
             ParticleRigidContactSolver(particles, BoundaryBullet(bounds)),
             PBDSolverConfig(solverIterations = 5)
         )

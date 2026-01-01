@@ -1,6 +1,7 @@
 package me.anno.particles
 
 import me.anno.maths.Maths.clamp
+import me.anno.particles.broadphase.SparseParticleGrid
 import me.anno.particles.utils.BoundaryBullet
 import me.anno.utils.Clock
 import org.joml.AABBf
@@ -45,7 +46,7 @@ fun main() {
     for (size in listOf(1250, 2500, 5000, 10_000, 20_000, 40_000)) {
         val particles = createParticleCloud(size, bounds)
 
-        val grid = SpatialHashGrid(cellSize = 0.01f)
+        val grid = SparseParticleGrid(cellSize = 0.01f)
         val contactSolver = ParticleContactSolver(particles, grid)
         val bullet = BoundaryBullet(bounds)
         val rigidSolver = ParticleRigidContactSolver(particles, bullet)

@@ -1,7 +1,6 @@
 package me.anno.particles.utils
 
 import me.anno.particles.BulletCollisionWorld
-import me.anno.particles.ContactHit
 import me.anno.particles.RaycastHit
 import org.joml.AABBf
 import kotlin.math.max
@@ -11,7 +10,8 @@ class BoundaryBullet(val bounds: AABBf) : BulletCollisionWorld {
 
     override fun raycast(
         fromX: Float, fromY: Float, fromZ: Float,
-        toX: Float, toY: Float, toZ: Float
+        toX: Float, toY: Float, toZ: Float,
+        dst: RaycastHit
     ): RaycastHit? {
         val fromInside = bounds.testPoint(fromX, fromY, fromZ)
         val toInside = bounds.testPoint(toX, toY, toZ)
@@ -32,7 +32,7 @@ class BoundaryBullet(val bounds: AABBf) : BulletCollisionWorld {
         val normalX = eq(hitX, bounds.minX, bounds.maxX)
         val normalY = eq(hitY, bounds.minY, bounds.maxY)
         val normalZ = eq(hitZ, bounds.minZ, bounds.maxZ)
-        return RaycastHit(hitX, hitY, hitZ, normalX, normalY, normalZ, 0)
+        return dst.set(hitX, hitY, hitZ, normalX, normalY, normalZ)
     }
 
     private fun AABBf.raycastFromInside(
@@ -63,22 +63,4 @@ class BoundaryBullet(val bounds: AABBf) : BulletCollisionWorld {
         if (v >= max - epsilon) return -1f
         return 0f
     }
-
-    override fun sphereCast(x: Float, y: Float, z: Float, radius: Float): List<ContactHit> {
-        val result = ArrayList<ContactHit>()
-        val minX = bounds.minX + radius
-        val minY = bounds.minY + radius
-        val minZ = bounds.minZ + radius
-        val maxX = bounds.maxX - radius
-        val maxY = bounds.maxY - radius
-        val maxZ = bounds.maxZ - radius
-        if (x < minX) result.add(ContactHit(minX, y, z, +1f, 0f, 0f, 0))
-        if (y < minY) result.add(ContactHit(x, minY, z, 0f, +1f, 0f, 1))
-        if (z < minZ) result.add(ContactHit(x, y, minZ, 0f, 0f, +1f, 2))
-        if (x > maxX) result.add(ContactHit(maxX, y, z, -1f, 0f, 0f, 3))
-        if (y > maxY) result.add(ContactHit(x, maxY, z, 0f, -1f, 0f, 4))
-        if (z > maxZ) result.add(ContactHit(x, y, maxZ, 0f, 0f, -1f, 5))
-        return result
-    }
-
 }

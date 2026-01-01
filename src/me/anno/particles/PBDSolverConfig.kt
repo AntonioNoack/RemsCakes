@@ -6,4 +6,5 @@ data class PBDSolverConfig(
     val gravityX: Float = 0f,
     val gravityY: Float = -9.81f,
     val gravityZ: Float = 0f,
+    val damping: Float = 0.999f,
 )

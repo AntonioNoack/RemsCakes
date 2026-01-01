@@ -6,7 +6,7 @@ import me.anno.ecs.systems.OnUpdate
 import me.anno.gpu.buffer.DrawMode
 import me.anno.particles.ParticleSet
 
-class ParticleRenderer(
+class PointParticleRenderer(
     val particles: ParticleSet,
     val mesh: Mesh = Mesh()
 ) : MeshComponent(mesh), OnUpdate {

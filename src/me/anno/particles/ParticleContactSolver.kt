@@ -1,5 +1,6 @@
 package me.anno.particles
 
+import me.anno.particles.broadphase.ParticleBroadphase
 import kotlin.math.sqrt
 
 /**
@@ -7,7 +8,7 @@ import kotlin.math.sqrt
  * */
 class ParticleContactSolver(
     private val particles: ParticleSet,
-    private val grid: SpatialHashGrid,
+    private val grid: ParticleBroadphase,
     private val stiffness: Float = 1.0f
 ) {
 

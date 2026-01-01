@@ -1,5 +1,6 @@
 package me.anno.particles
 
+import me.anno.particles.broadphase.SparseParticleGrid
 import me.anno.particles.utils.BoundaryBullet
 import org.joml.AABBf
 import org.junit.jupiter.api.Assertions.*
@@ -25,7 +26,7 @@ class SimulationTests {
             ArrayList(),
             ParticleContactSolver(
                 particles,
-                SpatialHashGrid(0.2f)
+                SparseParticleGrid(0.2f)
             ),
             ParticleRigidContactSolver(
                 particles,
@@ -57,7 +58,7 @@ class SimulationTests {
         val solver = PBDSolver(
             particles,
             ArrayList(),
-            ParticleContactSolver(particles, SpatialHashGrid(0.2f)),
+            ParticleContactSolver(particles, SparseParticleGrid(0.2f)),
             ParticleRigidContactSolver(particles, bullet),
             PBDSolverConfig(solverIterations = 8)
         )
@@ -90,7 +91,7 @@ class SimulationTests {
         val solver = PBDSolver(
             particles,
             ArrayList(),
-            ParticleContactSolver(particles, SpatialHashGrid(0.2f)),
+            ParticleContactSolver(particles, SparseParticleGrid(0.2f)),
             ParticleRigidContactSolver(particles, bullet),
             PBDSolverConfig()
         )
@@ -137,7 +138,7 @@ class SimulationTests {
             ArrayList(),
             ParticleContactSolver(
                 particles,
-                SpatialHashGrid(0.15f)
+                SparseParticleGrid(0.15f)
             ),
             ParticleRigidContactSolver(
                 particles,
@@ -176,7 +177,7 @@ class SimulationTests {
 
         val solver = PBDSolver(
             particles, emptyList(),
-            ParticleContactSolver(particles, SpatialHashGrid(0.2f)),
+            ParticleContactSolver(particles, SparseParticleGrid(0.2f)),
             ParticleRigidContactSolver(particles, bullet),
             PBDSolverConfig()
         )

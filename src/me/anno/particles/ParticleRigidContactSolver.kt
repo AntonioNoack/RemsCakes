@@ -8,6 +8,8 @@ class ParticleRigidContactSolver(
     private val stiffness: Float = 1.0f
 ) {
 
+    private val dst = RaycastHit(0f, 0f, 0f, 0f, 0f, 0f)
+
     fun solveContacts() {
         for (i in 0 until particles.size) {
             if (particles.invMass[i] == 0f) continue
@@ -35,7 +37,7 @@ class ParticleRigidContactSolver(
             // Sweep test (prevents tunneling)
             val hit = bullet.raycast(
                 px, py, pz,
-                tx + dx, ty + dy, tz + dz
+                tx + dx, ty + dy, tz + dz, dst
             ) ?: continue
 
             val nx = hit.normalX
@@ -69,7 +71,6 @@ class ParticleRigidContactSolver(
 
             // TODO: tangential friction against rigid body
             // TODO: rolling resistance
-            // TODO: sticky contact (dough)
             // TODO: two-way impulse transfer to rigid body
         }
     }
