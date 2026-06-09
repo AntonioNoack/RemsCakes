@@ -1,6 +1,7 @@
 package me.anno.particles.visual
 
 import me.anno.ecs.Entity
+import me.anno.ecs.components.mesh.MeshComponent
 import me.anno.engine.ui.render.SceneView.Companion.testSceneWithUI
 import me.anno.maths.Maths.TAUf
 import me.anno.particles.ParticleSet
@@ -11,6 +12,7 @@ import me.anno.particles.constraints.*
 import me.anno.particles.utils.BoundaryBullet
 import me.anno.particles.utils.ParticlePhysics
 import me.anno.particles.utils.SphereParticleRenderer
+import me.anno.utils.OS.res
 import org.joml.AABBf
 import kotlin.math.cos
 import kotlin.math.sin
@@ -80,9 +82,14 @@ class SalamiStack(numSlices: Int) {
 
 fun main() {
     // todo create and deform proper salami meshes
+    //  - assign skeletal animation weights to each vertex
+    //  - reconstruct skeletal transforms for each particle after each frame
     val ss = SalamiStack(7)
     val scene = Entity()
         .add(SphereParticleRenderer(ss.particles, emptyList()))
         .add(ParticlePhysics(ss.solver, 1f / 60f))
+    Entity(scene)
+        .add(MeshComponent(res.getChild("models/Salami.glb")))
+        .setScale(10f)
     testSceneWithUI("SandPileTest", scene)
 }

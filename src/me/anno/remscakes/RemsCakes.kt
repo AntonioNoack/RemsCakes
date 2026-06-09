@@ -112,24 +112,6 @@ fun main() {
     }
 }
 
-fun createSceneUI2(scene: FileReference, init: ((SceneView) -> Unit)? = null): Panel {
-    val listY = PanelListY(style)
-    listY.add(ECSSceneTabs)
-    val playMode = PlayMode.PLAYING
-    ECSSceneTabs.open(ECSSceneTab(scene, playMode), true)
-    val sceneView = SceneView(playMode, style)
-    PrefabInspector.currentInspector = PrefabInspector(scene)
-    val list = CustomList(false, style)
-    if (debugScene) list.add(ECSTreeView(style), 1f)
-    list.add(sceneView, 3f)
-    if (debugScene) list.add(PropertyInspector({ EditorState.selection }, style), 1f)
-    if (init != null) init(sceneView)
-    listY.add(list)
-    list.weight = 1f
-    listY.weight = 1f
-    return listY
-}
-
 fun createPlayer(scene: Entity, renderView: RenderView): LocalPlayer {
 
     val localPlayer = LocalPlayer()
@@ -174,7 +156,13 @@ fun definePhysics() {
     }
     if (!debugScene) BulletDebugDraw.debugMode = 0
     registerSystem(physics)
+
+    // todo spawn particle system with some fluid (in a glass?),
+    //  some sand (flour) and some dough and salami
+
 }
+
+// todo let the player build the cupboards and such? :D
 
 fun spawnFloor(scene: Entity) {
     Entity("Floor", scene)
@@ -193,7 +181,6 @@ fun spawnGems(scene: Entity) {
     gemMesh.makeFlatShaded(true)
     gemMesh.scale(Vector3f(0.2f))
 
-    //  res.getChild("models/Gem.glb")
     val material = Material().apply {
         diffuseBase.w = 0.1f
         pipelineStage = PipelineStage.GLASS
@@ -201,6 +188,7 @@ fun spawnGems(scene: Entity) {
         roughnessMinMax.set(0.01f)
         indexOfRefraction = 3f
     }
+
     for (i in 0 until 10) {
         val angle = (i + 0.5) * TAU / 10
         Entity("Gem", scene)
