@@ -6,6 +6,7 @@ import me.anno.ecs.systems.OnUpdate
 import me.anno.engine.ui.render.RenderView
 import me.anno.input.Input
 import me.anno.input.Key
+import me.anno.input.MouseLock.unlockMouse
 
 class Controls : Component(), OnUpdate, InputListener {
     override fun onUpdate() {
@@ -15,9 +16,7 @@ class Controls : Component(), OnUpdate, InputListener {
         }
         if (Input.wasKeyPressed(Key.KEY_ESCAPE)) {
             // todo show game/settings menu
-            Input.unlockMouse()
+            unlockMouse()
         }
     }
-
-    private operator fun Key.plus(i: Int) = Key.byId(id + i)
 }

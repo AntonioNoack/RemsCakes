@@ -14,6 +14,7 @@ import me.anno.ecs.components.collider.InfinitePlaneCollider
 import me.anno.ecs.components.collider.MeshCollider
 import me.anno.ecs.components.collider.SphereCollider
 import me.anno.ecs.components.mesh.MeshComponent
+import me.anno.ecs.components.mesh.TransformMesh.scale
 import me.anno.ecs.components.mesh.material.Material
 import me.anno.ecs.components.mesh.shapes.IcosahedronModel
 import me.anno.ecs.components.mesh.utils.NormalCalculator.makeFlatShaded
@@ -22,17 +23,18 @@ import me.anno.ecs.prefab.PrefabInspector
 import me.anno.ecs.prefab.change.Path
 import me.anno.ecs.systems.Systems
 import me.anno.ecs.systems.Systems.registerSystem
-import me.anno.engine.DefaultAssets
 import me.anno.engine.OfficialExtensions
 import me.anno.engine.ui.ECSTreeView
 import me.anno.engine.ui.EditorState
 import me.anno.engine.ui.render.PlayMode
 import me.anno.engine.ui.render.RenderView
 import me.anno.engine.ui.render.SceneView
+import me.anno.engine.ui.render.SceneView.Companion.testSceneWithUI
 import me.anno.engine.ui.scenetabs.ECSSceneTab
 import me.anno.engine.ui.scenetabs.ECSSceneTabs
 import me.anno.gpu.GFX
 import me.anno.gpu.pipeline.PipelineStage
+import me.anno.graph.visual.render.effects.AutoExposureNode
 import me.anno.io.files.FileReference
 import me.anno.maths.Maths.TAU
 import me.anno.ui.Panel
@@ -42,6 +44,7 @@ import me.anno.ui.debug.PureTestEngine.Companion.testPureUI
 import me.anno.ui.editor.PropertyInspector
 import me.anno.utils.OS.res
 import org.apache.logging.log4j.LogManager
+import org.joml.Vector3f
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -66,8 +69,8 @@ import kotlin.math.sin
 //  upto four components per particle???
 //  mix color/physics separate from components???
 
-// todo first-person player
-// todo player can grab stuff -> we kind of have a sample for that: GemMiner
+// done first-person player
+// done player can grab stuff -> we kind of have a sample for that: GemMiner
 // todo player can throw things, let them fall
 // todo player is in a relatively simple environment
 
@@ -91,14 +94,21 @@ fun main() {
 
     scene.add(Controls())
 
-    testPureUI("Rem's Gems") {
-        GFX.someWindow.windowStack.firstOrNull()?.drawDirectly = false
-        scene.prefabPath = Path.ROOT_PATH
-        createSceneUI2(scene.ref) { sceneView ->
-            // val ui = sceneView.playControls
-            // createInventoryUI(ui)
-            createPlayer(scene, sceneView.renderView)
-        }.fill(1f)
+    AutoExposureNode.minBrightness = 0.01f
+    AutoExposureNode.maxBrightness = 100f
+
+    if (false) {
+        testSceneWithUI("Rem's Gems", scene)
+    } else {
+        testPureUI("Rem's Gems") {
+            GFX.someWindow.windowStack.firstOrNull()?.drawDirectly = false
+            scene.prefabPath = Path.ROOT_PATH
+            createSceneUI2(scene.ref) { sceneView ->
+                // val ui = sceneView.playControls
+                // createInventoryUI(ui)
+                createPlayer(scene, sceneView.renderView)
+            }.fill(1f)
+        }
     }
 }
 
@@ -131,6 +141,8 @@ fun createPlayer(scene: Entity, renderView: RenderView): LocalPlayer {
         position.set(0.0, 0.7, 0.0)
     }
 
+    val playerHeight = 1.8f
+
     val camBase = CameraController.setup(controls, renderView)
     Entity("Player", scene)
         .add(PlayerController())
@@ -138,14 +150,17 @@ fun createPlayer(scene: Entity, renderView: RenderView): LocalPlayer {
             mass = 2f
             angularFactor.set(0.0) // cannot rotate
         })
-        .add(CapsuleCollider().apply { radius = 0.5f; halfHeight = 0.5f })
+        .add(CapsuleCollider().apply {
+            radius = playerHeight * 0.25f
+            halfHeight = playerHeight * 0.25f
+        })
         // .add(MeshComponent(CapsuleModel.createCapsule(20, 10, 0.5f, 0.5f)))
         .add(camBase)
         .setPosition(0.0, 1.0, 0.0)
 
     Entity("Magnet", camBase.children[0])
         .add(GhostBody())
-        .add(SphereCollider().apply { radius = 2f })
+        .add(SphereCollider().apply { radius = playerHeight })
         .add(MagnetAttractor())
         .setPosition(0.0, 0.0, -1.0)
 
@@ -162,25 +177,21 @@ fun definePhysics() {
 }
 
 fun spawnFloor(scene: Entity) {
-    val floorMaterial = Material.diffuse(0x111111)
     Entity("Floor", scene)
         .add(StaticBody())
         .add(InfinitePlaneCollider())
-        .add(MeshComponent(DefaultAssets.plane, floorMaterial))
-        .setScale(10f)
 
-    if (false) {
-        val caveMesh = res.getChild("models/Cave.glb")
-        Entity("Cave", scene)
-            .add(MeshComponent(caveMesh, floorMaterial))
-            .add(StaticBody())
-            .add(MeshCollider(caveMesh).apply { isConvex = false })
-    }
+    val roomMesh = res.getChild("models/Conditorei.glb")
+    Entity("Room", scene)
+        .add(MeshComponent(roomMesh))
+        .add(StaticBody())
+        .add(MeshCollider(roomMesh).apply { isConvex = false })
 }
 
 fun spawnGems(scene: Entity) {
     val gemMesh = IcosahedronModel.createIcosphere(0)
-    if (false) gemMesh.makeFlatShaded(true) // todo why is this not working???
+    gemMesh.makeFlatShaded(true)
+    gemMesh.scale(Vector3f(0.2f))
 
     //  res.getChild("models/Gem.glb")
     val material = Material().apply {
@@ -197,9 +208,8 @@ fun spawnGems(scene: Entity) {
                 angularDamping = 0.2f
                 mass = 0.1f
             })
-            .add(SphereCollider())
+            .add(SphereCollider().apply { radius = 0.2f })
             .add(MeshComponent(gemMesh, material))
             .setPosition(cos(angle), 1.0, sin(angle))
-            .setScale(0.2f)
     }
 }
