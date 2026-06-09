@@ -40,8 +40,9 @@ import me.anno.particles.ParticleSet
 import me.anno.particles.ParticleSet.Companion.mergeParticles
 import me.anno.particles.utils.ParticlePhysics
 import org.joml.Vector3f
+import kotlin.math.abs
 
-// todo we need proper fluid rendering:
+// (to do) we need proper fluid rendering:
 //  - put all particles on the GPU
 //  - create a camera-aligned grid, maybe even make it perspective
 //  - register particles in (all) relevant cells across multiple LODs
@@ -52,7 +53,7 @@ import org.joml.Vector3f
 //  it should be put into a size-limited buffer for rasterization
 //  -> ordering from front-to-back is an issue :/
 
-// todo we don't have that many -> just use alpha-blending with a smart formula
+// we don't have that many -> just use alpha-blending with a smart formula
 
 class FluidDensityRenderNode(val particles: ParticleSet) : RenderViewNode(
     "FluidDensity", listOf(
@@ -62,11 +63,12 @@ class FluidDensityRenderNode(val particles: ParticleSet) : RenderViewNode(
         "Texture", "Depth",
     ), listOf(
         "Texture", "Illuminated",
-        "Texture", "FluidDebug",
+        "Texture", "FluidDebug0",
+        "Texture", "FluidDebug1",
     )
 ) {
 
-    // todo we need the following:
+    // we need the following:
     //  uint32 buffer for each pixel for
     //   - collected density
     //   - R,G,B
@@ -81,6 +83,7 @@ class FluidDensityRenderNode(val particles: ParticleSet) : RenderViewNode(
         "fluid-accu", listOf(
             Variable(GLSLType.V2F, "positions", VariableMode.ATTR),
             Variable(GLSLType.V4F, "particlePositions", VariableMode.ATTR),
+            Variable(GLSLType.V4F, "particleColors", VariableMode.ATTR),
             Variable(GLSLType.V3F, "camDirU"),
             Variable(GLSLType.V3F, "camDirV"),
             Variable(GLSLType.V3F, "camDirW"),
@@ -94,15 +97,18 @@ class FluidDensityRenderNode(val particles: ParticleSet) : RenderViewNode(
                 "   float zx = dot(camDirW, localPosition);\n" +
                 "   z0 = zx - particlePositions.w;\n" +
                 "   z1 = zx + particlePositions.w;\n" +
+                "   color = particleColors.xyz;\n" +
                 "}\n", listOf(
             Variable(GLSLType.V3F, "localPosition"),
             Variable(GLSLType.V2F, "uvs"),
             Variable(GLSLType.V2F, "uv"),
             Variable(GLSLType.V1F, "z0"),
             Variable(GLSLType.V1F, "z1"),
+            Variable(GLSLType.V3F, "color"),
         ), listOf(
             Variable(GLSLType.S2D, "depthTex"),
-            Variable(GLSLType.V4F, "result", VariableMode.OUT)
+            Variable(GLSLType.V4F, "result0", VariableMode.OUT),
+            Variable(GLSLType.V4F, "result1", VariableMode.OUT)
         ) + depthVars, "" + rawToDepth +
                 "void main() {\n" +
                 // depth-occlusion check
@@ -114,7 +120,8 @@ class FluidDensityRenderNode(val particles: ParticleSet) : RenderViewNode(
                 "   float a = 1.0 - d;\n" +
                 "   if(a <= 0.0) discard;\n" +
                 "   a = 0.05 * sqrt(a) * smoothstep(z0, z1, depth);\n" +
-                "   result = vec4((uvs.x*.5+.5)*a, (uvs.y*.5+.5)*a, 0.0, a);\n" +
+                "   result0 = vec4((uvs.x*.5+.5)*a, (uvs.y*.5+.5)*a, 0.0, a);\n" +
+                "   result1 = vec4(color * a, a);\n" +
                 "}\n"
     )
 
@@ -129,32 +136,39 @@ class FluidDensityRenderNode(val particles: ParticleSet) : RenderViewNode(
             Variable(GLSLType.V2F, "uvs")
         ), listOf(
             Variable(GLSLType.S2D, "colorTex"),
-            Variable(GLSLType.S2D, "accuTex"),
+            Variable(GLSLType.S2D, "accuTex0"),
+            Variable(GLSLType.S2D, "accuTex1"),
             Variable(GLSLType.V3F, "camDirU"),
             Variable(GLSLType.V3F, "camDirV"),
             Variable(GLSLType.SCube, "reflectionMap"),
             Variable(GLSLType.V4F, "result", VariableMode.OUT)
         ), "" +
                 "void main() {\n" +
-                "   vec4 color = texture(colorTex,uvs);\n" +
-                "   vec4 accu = texture(accuTex, uvs);\n" +
+                "   vec4 color = texture(colorTex, uvs);\n" +
+                "   vec4 accu0 = texture(accuTex0, uvs);\n" +
+                "   vec4 accu1 = texture(accuTex1, uvs);\n" +
                 // derive normal for reflections
-                "   float density = accu.w;\n" +
-                "   float lightFactor = 0.7 * clamp(density * 10.0, 0.0, 1.0);\n" +
+                "   float density = max(accu0.w, 1e-7);\n" +
+                "   float fluidOpacity = 0.7 * clamp(density * 10.0, 0.0, 1.0);\n" +
                 "   vec3 viewDir = cross(camDirU, camDirV);\n" +
-                "   vec3 normalDir = normalize(vec3(accu.x/density-0.5, accu.y/density-0.5, -0.5));\n" +
+                "   vec4 fluidColor = accu1 / density;\n" +
+                "   vec3 normalDir = normalize(vec3(accu0.x/density-0.5, accu0.y/density-0.5, -0.5));\n" +
                 "   normalDir = camDirU * normalDir.x + camDirV * normalDir.y + viewDir * normalDir.z;\n" +
                 "   vec3 reflectDir = reflect(viewDir, normalDir);\n" +
-                "   result = color * (1.0 - lightFactor)\n" +
-                "       + lightFactor * max(" +
-                "           texture(reflectionMap, $cubemapsAreLeftHanded * -reflectDir), " +
-                "           texture(reflectionMap, $cubemapsAreLeftHanded * +reflectDir));\n" +
+                "   result = color * (1.0 - fluidOpacity)" +
+                "       + fluidOpacity * fluidColor * color\n" +
+                "       + fluidOpacity * mix(fluidColor,vec4(1.0),0.3) * max(" +
+                "           texture(reflectionMap, $cubemapsAreLeftHanded * -reflectDir), " + // front
+                "           texture(reflectionMap, $cubemapsAreLeftHanded * +reflectDir));\n" + // back
                 "}\n"
     )
 
     val instanceBuffer = StaticBuffer(
         "positions",
-        bind(Attribute("particlePositions", 4)), // pos, radius
+        bind(
+            Attribute("particlePositions", 4), // pos, radius
+            Attribute("particleColors", 4), // color, unused
+        ),
         particles.size
     )
 
@@ -164,8 +178,12 @@ class FluidDensityRenderNode(val particles: ParticleSet) : RenderViewNode(
         val color = getTextureInput(3) ?: TextureLib.whiteTexture
         val depth = getTextureInput(4) ?: TextureLib.depthTexture
 
-        val accu = FBStack["fluid-accu", width, height, TargetType.UInt16x4, 1, DepthBufferType.NONE]
-        val blend = FBStack["fluid-blend", width, height, TargetType.UInt8x4, 1, DepthBufferType.NONE]
+        val accu = FBStack["fluid-accu", width, height,
+            listOf(TargetType.UInt16x4, TargetType.UInt16x4),
+            1, DepthBufferType.NONE]
+        val blend = FBStack["fluid-blend", width, height,
+            TargetType.UInt8x4,
+            1, DepthBufferType.NONE]
         timeRendering("Fluid", timer) {
             useFrame(accu) {
                 accu.clearColor(0)
@@ -181,7 +199,19 @@ class FluidDensityRenderNode(val particles: ParticleSet) : RenderViewNode(
                         nio.putFloat(particles.px[i] - camPos.x.toFloat())
                         nio.putFloat(particles.py[i] - camPos.y.toFloat())
                         nio.putFloat(particles.pz[i] - camPos.z.toFloat())
-                        nio.putFloat(particles.radius[i] * 1.5f)
+                        val radius = particles.radius[i]
+                        nio.putFloat(radius * 1.5f)
+
+                        // todo variable for thickness/opacity (milk/coffee vs water -> no backside reflection)
+                        val density = 1f / particles.invMass[i]
+                        val r = if (abs(density - 1f) < 0.5f) 1f else 0f
+                        val g = if (abs(density - 2f) < 0.5f) 1f else 0f
+                        val b = if (abs(density - 3f) < 0.5f) 1f else 0f
+
+                        nio.putFloat(r)
+                        nio.putFloat(g)
+                        nio.putFloat(b)
+                        nio.putFloat(0f)
                     }
                     instanceBuffer.cpuSideChanged()
                     instanceBuffer.upload()
@@ -212,7 +242,8 @@ class FluidDensityRenderNode(val particles: ParticleSet) : RenderViewNode(
                 shader.v3f("camDirV", Vector3f(0f, 1f, 0f).rotate(RenderState.cameraRotation))
 
                 color.bindTrulyNearest(shader, "colorTex")
-                accu.getTexture0().bindTrulyNearest(shader, "accuTex")
+                accu.getTextureI(0).bindTrulyNearest(shader, "accuTex0")
+                accu.getTextureI(1).bindTrulyNearest(shader, "accuTex1")
 
                 pipeline.bakedSkybox!!.getTexture0()
                     .bindTrulyLinear(shader, "reflectionMap")
@@ -223,6 +254,7 @@ class FluidDensityRenderNode(val particles: ParticleSet) : RenderViewNode(
 
         setOutput(1, Texture.texture(blend, 0))
         setOutput(2, Texture.texture(accu, 0))
+        setOutput(3, Texture.texture(accu, 1))
     }
 }
 
