@@ -4,6 +4,7 @@ import me.anno.ecs.Transform
 import me.anno.ecs.components.mesh.IMesh
 import me.anno.ecs.components.mesh.MeshSpawner
 import me.anno.ecs.components.mesh.material.Material
+import me.anno.ecs.components.mesh.material.MaterialBase
 import me.anno.ecs.components.mesh.shapes.IcosahedronModel
 import me.anno.gpu.pipeline.Pipeline
 import me.anno.particles.ParticleSet
@@ -24,11 +25,11 @@ class SphereParticleRenderer(
         fillAllSpace(dstUnion)
     }
 
-    override fun forEachMesh(pipeline: Pipeline?, callback: (IMesh, Material?, Transform) -> Boolean) {
+    override fun forEachMesh(pipeline: Pipeline?, callback: (IMesh, MaterialBase?, Transform) -> Boolean) {
         throw NotImplementedError()
     }
 
-    override fun forEachMeshGroupTRS(pipeline: Pipeline, callback: (IMesh, Material?) -> FloatArrayList): Boolean {
+    override fun forEachMeshGroupTRS(pipeline: Pipeline, callback: (IMesh, MaterialBase?) -> FloatArrayList): Boolean {
         var i = 0
         for (range in materialRanges) {
             val dst = callback(mesh, range.material)
