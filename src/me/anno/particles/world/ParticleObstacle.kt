@@ -1,6 +1,8 @@
-package me.anno.particles
+package me.anno.particles.world
 
-interface BulletCollisionWorld {
+import me.anno.particles.RaycastHit
+
+interface ParticleObstacle {
     /**
      * Performs a collision query against rigid bodies.
      * Returns the closest hit, or null if no collision.

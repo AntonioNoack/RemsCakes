@@ -1,9 +1,9 @@
 package me.anno.particles.constraints
 
-import me.anno.particles.BulletCollisionWorld
 import me.anno.particles.ParticleSet
 import me.anno.particles.RaycastHit
 import me.anno.particles.constraints.ParticleConstraint.Companion.addT
+import me.anno.particles.world.ParticleObstacle
 import kotlin.math.sqrt
 
 /**
@@ -11,10 +11,10 @@ import kotlin.math.sqrt
  * */
 class ParticleRigidContactSolver(
     private val particles: ParticleSet,
-    private val bullet: BulletCollisionWorld,
+    private val colliders: List<ParticleObstacle>,
 ) {
 
-    private val dst = RaycastHit(0f, 0f, 0f, 0f, 0f, 0f)
+    private val dst = RaycastHit()
 
     fun solveContacts() {
         for (i in 0 until particles.size) {
@@ -32,49 +32,51 @@ class ParticleRigidContactSolver(
             var dy = ty - py
             var dz = tz - pz
             val distSq = dx * dx + dy * dy + dz * dz
-            if (distSq < 1e-9f) continue
+            // todo but the environment may be moving...
+            if (distSq < 1e-9f) continue // not moving
 
             val radius = particles.radius[i]
-            val scale = radius / sqrt(distSq)
+            // delta should be radius + movement, not just radius
+            val scale = radius / sqrt(distSq) + 1f
             dx *= scale
             dy *= scale
             dz *= scale
 
-            // Sweep test (prevents tunneling)
-            val hit = bullet.raycast(
-                px, py, pz,
-                tx + dx, ty + dy, tz + dz, dst
-            ) ?: continue
+            for (ci in colliders.indices) {
+                val collider = colliders[ci]
+                // Sweep test (prevents tunneling)
+                val hit = collider.raycast(
+                    px, py, pz,
+                    tx + dx, ty + dy, tz + dz, dst
+                ) ?: continue
 
-            val nx = hit.normalX
-            val ny = hit.normalY
-            val nz = hit.normalZ
+                val (nx, ny, nz) = hit.normal
 
-            // todo this should get a marker of what
-            //  the relative velocity of the contact body is:
-            //  friction must be applied with relative velocity!
-            particles.inContact[i] = true
-            particles.contactNx[i] = nx
-            particles.contactNy[i] = ny
-            particles.contactNz[i] = nz
+                // todo this should get a marker of what
+                //  the relative velocity of the contact body is:
+                //  friction must be applied with relative velocity!
+                particles.inContact[i] = true
+                particles.contactNx[i] = nx
+                particles.contactNy[i] = ny
+                particles.contactNz[i] = nz
 
-            // Move particle out of penetration
+                // Move particle out of penetration
 
-            val penetration0 = (hit.hitX - tx) * nx +
-                    (hit.hitY - ty) * ny +
-                    (hit.hitZ - tz) * nz
-            val penetration = -(penetration0 + radius)
+                val (hx, hy, hz) = hit.position
+                val penetration0 = (hx - tx) * nx + (hy - ty) * ny + (hz - tz) * nz
+                val penetration = -(penetration0 + radius)
 
-            // println("Penetration[$px,$py,$pz -> $tx,$ty,$tz]: $penetration0 x $radius -> $penetration, Hit: $hit")
-            if (penetration >= 0f) continue
+                // println("Penetration[$px,$py,$pz -> $tx,$ty,$tz]: $penetration0 x $radius -> $penetration, Hit: $hit")
+                if (penetration >= 0f) continue
 
-            // println("Delta: ${-correction * ny}")
+                // println("Delta: ${-correction * ny}")
 
-            particles.addT(i, nx, ny, nz, -penetration)
+                particles.addT(i, nx, ny, nz, -penetration)
 
-            // TODO: tangential friction against rigid body
-            // TODO: rolling resistance
-            // TODO: two-way impulse transfer to rigid body
+                // TODO: tangential friction against rigid body
+                // TODO: rolling resistance
+                // TODO: two-way impulse transfer to rigid body
+            }
         }
     }
 }

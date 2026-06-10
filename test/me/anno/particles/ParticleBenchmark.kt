@@ -4,7 +4,7 @@ import me.anno.maths.Maths.clamp
 import me.anno.particles.broadphase.SparseParticleGrid
 import me.anno.particles.constraints.ParticleContactSolver
 import me.anno.particles.constraints.ParticleRigidContactSolver
-import me.anno.particles.utils.BoundaryBullet
+import me.anno.particles.world.BoundsCollisions
 import me.anno.utils.Clock
 import org.joml.AABBf
 import java.util.*
@@ -50,8 +50,8 @@ fun main() {
 
         val grid = SparseParticleGrid(cellSize = 0.01f)
         val contactSolver = ParticleContactSolver(particles, grid)
-        val bullet = BoundaryBullet(bounds)
-        val rigidSolver = ParticleRigidContactSolver(particles, bullet)
+        val bullet = BoundsCollisions(bounds)
+        val rigidSolver = ParticleRigidContactSolver(particles, listOf(bullet))
 
         val solver = ParticleSolver(
             particles,

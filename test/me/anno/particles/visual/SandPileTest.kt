@@ -9,7 +9,7 @@ import me.anno.particles.broadphase.SparseParticleGrid
 import me.anno.particles.constraints.ParticleContactSolver
 import me.anno.particles.constraints.ParticleRigidContactSolver
 import me.anno.particles.createParticleCloud
-import me.anno.particles.utils.BoundaryBullet
+import me.anno.particles.world.BoundsCollisions
 import me.anno.particles.utils.ParticlePhysics
 import me.anno.particles.utils.SphereParticleRenderer
 import org.joml.AABBf
@@ -28,8 +28,8 @@ fun main() {
 
     val grid = SparseParticleGrid(cellSize = 0.03f)
     val contactSolver = ParticleContactSolver(particles, grid)
-    val bullet = BoundaryBullet(bounds)
-    val rigidSolver = ParticleRigidContactSolver(particles, bullet)
+    val bullet = BoundsCollisions(bounds)
+    val rigidSolver = ParticleRigidContactSolver(particles, listOf(bullet))
 
     val solver = ParticleSolver(
         particles,

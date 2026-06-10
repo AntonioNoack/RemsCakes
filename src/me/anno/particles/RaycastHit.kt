@@ -1,20 +1,21 @@
 package me.anno.particles
 
-data class RaycastHit(
-    var hitX: Float,
-    var hitY: Float,
-    var hitZ: Float,
-    var normalX: Float,
-    var normalY: Float,
-    var normalZ: Float
-) {
+import org.joml.Vector3f
+
+class RaycastHit {
+
+    val position = Vector3f()
+    val normal = Vector3f()
+
     fun set(hitX: Float, hitY: Float, hitZ: Float, normalX: Float, normalY: Float, normalZ: Float): RaycastHit {
-        this.hitX = hitX
-        this.hitY = hitY
-        this.hitZ = hitZ
-        this.normalX = normalX
-        this.normalY = normalY
-        this.normalZ = normalZ
+        position.set(hitX, hitY, hitZ)
+        normal.set(normalX, normalY, normalZ)
+        return this
+    }
+
+    fun set(src: RaycastHit): RaycastHit {
+        position.set(src.position)
+        normal.set(src.normal)
         return this
     }
 }

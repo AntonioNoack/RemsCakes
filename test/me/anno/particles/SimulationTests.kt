@@ -4,7 +4,7 @@ import me.anno.maths.Maths.length
 import me.anno.particles.broadphase.SparseParticleGrid
 import me.anno.particles.constraints.ParticleContactSolver
 import me.anno.particles.constraints.ParticleRigidContactSolver
-import me.anno.particles.utils.BoundaryBullet
+import me.anno.particles.world.BoundsCollisions
 import org.joml.AABBf
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -20,21 +20,14 @@ class SimulationTests {
         particles.invMass[0] = 1f
         particles.radius[0] = 0.05f
 
-        val bullet = BoundaryBullet(
+        val bullet = BoundsCollisions(
             AABBf(-10f, -10f, -10f, 10f, 10f, 10f)
         )
 
         val solver = ParticleSolver(
-            particles,
-            ArrayList(),
-            ParticleContactSolver(
-                particles,
-                SparseParticleGrid(0.2f)
-            ),
-            ParticleRigidContactSolver(
-                particles,
-                bullet
-            ),
+            particles, ArrayList(),
+            ParticleContactSolver(particles, SparseParticleGrid(0.2f)),
+            ParticleRigidContactSolver(particles, listOf(bullet)),
             ParticleSolverConfig()
         )
 
@@ -56,13 +49,13 @@ class SimulationTests {
         particles.radius[0] = 0.05f
 
         val bounds = AABBf(-1f, 0f, -1f, 1f, 1f, 1f)
-        val bullet = BoundaryBullet(bounds)
+        val bullet = BoundsCollisions(bounds)
 
         val solver = ParticleSolver(
             particles,
             ArrayList(),
             ParticleContactSolver(particles, SparseParticleGrid(0.2f)),
-            ParticleRigidContactSolver(particles, bullet),
+            ParticleRigidContactSolver(particles, listOf(bullet)),
             ParticleSolverConfig(solverIterations = 8)
         )
 
@@ -89,13 +82,13 @@ class SimulationTests {
         particles.radius[0] = 0.05f
 
         val bounds = AABBf(-1f, -1f, -1f, 1f, 1f, 1f)
-        val bullet = BoundaryBullet(bounds)
+        val bullet = BoundsCollisions(bounds)
 
         val solver = ParticleSolver(
             particles,
             ArrayList(),
             ParticleContactSolver(particles, SparseParticleGrid(0.2f)),
-            ParticleRigidContactSolver(particles, bullet),
+            ParticleRigidContactSolver(particles, listOf(bullet)),
             ParticleSolverConfig()
         )
 
@@ -141,7 +134,7 @@ class SimulationTests {
             particles,
             ArrayList(),
             ParticleContactSolver(particles, SparseParticleGrid(0.15f)),
-            ParticleRigidContactSolver(particles, BoundaryBullet(bounds)),
+            ParticleRigidContactSolver(particles, listOf(BoundsCollisions(bounds))),
             ParticleSolverConfig(solverIterations = 5)
         )
 
@@ -167,14 +160,14 @@ class SimulationTests {
         particles.invMass[0] = 1f
         particles.radius[0] = 0.05f
 
-        val bullet = BoundaryBullet(
+        val bullet = BoundsCollisions(
             AABBf(-1f, 0f, -1f, 1f, 1f, 1f)
         )
 
         val solver = ParticleSolver(
             particles, ArrayList(),
             ParticleContactSolver(particles, SparseParticleGrid(0.2f)),
-            ParticleRigidContactSolver(particles, bullet),
+            ParticleRigidContactSolver(particles, listOf(bullet)),
             ParticleSolverConfig()
         )
 

@@ -5,7 +5,8 @@ import me.anno.particles.ParticleSet.Companion.mergeParticles
 import me.anno.particles.broadphase.DenseParticleGrid
 import me.anno.particles.constraints.ParticleContactSolver
 import me.anno.particles.constraints.ParticleRigidContactSolver
-import me.anno.particles.utils.BoundaryBullet
+import me.anno.particles.world.BoundsCollisions
+import me.anno.particles.world.ParticleObstacle
 import org.joml.AABBf
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -35,13 +36,15 @@ class FluidSimulationTests {
         return bounds.testPoint(x, y, z)
     }
 
-    // --- Stub: create solver for fluid particles ---
-    fun createFluidSolver(particles: ParticleSet): ParticleSolver {
+    fun createFluidSolver(
+        particles: ParticleSet,
+        collisions: List<ParticleObstacle> = listOf(BoundsCollisions(bounds))
+    ): ParticleSolver {
         return ParticleSolver(
             particles,
             ArrayList(),
             ParticleContactSolver(particles, DenseParticleGrid(radius * 1.4f, bounds)),
-            ParticleRigidContactSolver(particles, BoundaryBullet(bounds)),
+            ParticleRigidContactSolver(particles, collisions),
             ParticleSolverConfig(solverIterations = 5)
         )
     }

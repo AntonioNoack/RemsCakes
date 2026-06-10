@@ -9,7 +9,7 @@ import me.anno.particles.ParticleSolver
 import me.anno.particles.ParticleSolverConfig
 import me.anno.particles.broadphase.SparseParticleGrid
 import me.anno.particles.constraints.*
-import me.anno.particles.utils.BoundaryBullet
+import me.anno.particles.world.BoundsCollisions
 import me.anno.particles.utils.ParticlePhysics
 import me.anno.particles.utils.SphereParticleRenderer
 import me.anno.utils.OS.res
@@ -74,7 +74,7 @@ class SalamiStack(numSlices: Int) {
         particles,
         constraints,
         ParticleContactSolver(particles, SparseParticleGrid(2f * pointRadius)),
-        ParticleRigidContactSolver(particles, BoundaryBullet(bounds)),
+        ParticleRigidContactSolver(particles, listOf(BoundsCollisions(bounds))),
         ParticleSolverConfig(10)
     )
 

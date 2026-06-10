@@ -1,7 +1,9 @@
 package me.anno.particles.visual
 
+import me.anno.ecs.Component
 import me.anno.ecs.Entity
 import me.anno.ecs.components.mesh.MeshComponent
+import me.anno.ecs.systems.OnUpdate
 import me.anno.engine.DefaultAssets
 import me.anno.engine.ui.render.RenderMode
 import me.anno.engine.ui.render.RenderMode.Companion.opaqueNodeSettings
@@ -39,6 +41,8 @@ import me.anno.particles.FluidSimulationTests
 import me.anno.particles.ParticleSet
 import me.anno.particles.ParticleSet.Companion.mergeParticles
 import me.anno.particles.utils.ParticlePhysics
+import me.anno.particles.world.BoundsCollisions
+import me.anno.particles.world.SphereObstacle
 import org.joml.Vector3f
 import kotlin.math.abs
 
@@ -119,7 +123,7 @@ class FluidDensityRenderNode(val particles: ParticleSet) : RenderViewNode(
                 "   float d = dot(uvs,uvs);\n" +
                 "   float a = 1.0 - d;\n" +
                 "   if(a <= 0.0) discard;\n" +
-                "   a = 0.05 * sqrt(a) * smoothstep(z0, z1, depth);\n" +
+                "   a = 0.016 * (z1-z0) * sqrt(a) * smoothstep(z0, z1, depth);\n" +
                 "   result0 = vec4((uvs.x*.5+.5)*a, (uvs.y*.5+.5)*a, 0.0, a);\n" +
                 "   result1 = vec4(color * a, a);\n" +
                 "}\n"
@@ -144,17 +148,21 @@ class FluidDensityRenderNode(val particles: ParticleSet) : RenderViewNode(
             Variable(GLSLType.V4F, "result", VariableMode.OUT)
         ), "" +
                 "void main() {\n" +
-                "   vec4 color = texture(colorTex, uvs);\n" +
                 "   vec4 accu0 = texture(accuTex0, uvs);\n" +
                 "   vec4 accu1 = texture(accuTex1, uvs);\n" +
                 // derive normal for reflections
-                "   float density = max(accu0.w, 1e-7);\n" +
-                "   float fluidOpacity = 0.7 * clamp(density * 10.0, 0.0, 1.0);\n" +
+                "   float density = accu0.w, invDensity = 1.0 / max(accu0.w, 1e-20);\n" +
+                "   float fluidOpacity = 0.7 * clamp(density * 30.0, 0.0, 1.0);\n" +
                 "   vec3 viewDir = cross(camDirU, camDirV);\n" +
-                "   vec4 fluidColor = accu1 / density;\n" +
-                "   vec3 normalDir = normalize(vec3(accu0.x/density-0.5, accu0.y/density-0.5, -0.5));\n" +
-                "   normalDir = camDirU * normalDir.x + camDirV * normalDir.y + viewDir * normalDir.z;\n" +
-                "   vec3 reflectDir = reflect(viewDir, normalDir);\n" +
+                "   vec4 fluidColor = accu1 * invDensity;\n" +
+                "   vec3 normalDir = density > 0.9999 ? vec3(0,0,-1) : normalize(vec3(accu0.x*invDensity-0.5, accu0.y*invDensity-0.5, -(0.5 + 3.0 * density)));\n" +
+                "   vec3 normalDir2 = camDirU * normalDir.x + camDirV * normalDir.y + viewDir * normalDir.z;\n" +
+                "   vec3 reflectDir = reflect(viewDir, normalDir2);\n" +
+                "   vec4 color = vec4(" +
+                "       texture(colorTex, uvs + normalDir.xy * (0.11 * fluidOpacity)).r," +
+                "       texture(colorTex, uvs + normalDir.xy * (0.12 * fluidOpacity)).g," +
+                "       texture(colorTex, uvs + normalDir.xy * (0.13 * fluidOpacity)).b, 1.0" +
+                "   );\n" +
                 "   result = color * (1.0 - fluidOpacity)" +
                 "       + fluidOpacity * fluidColor * color\n" +
                 "       + fluidOpacity * mix(fluidColor,vec4(1.0),0.3) * max(" +
@@ -267,8 +275,15 @@ fun main() {
     val medium = helper.createFluidParticles(1000, density = 2.0f)
     val heavy = helper.createFluidParticles(1000, density = 3.0f)
 
+    val spPos = Vector3f(Vector3f(0f, 3f, 0f))
+    val spCol = SphereObstacle(spPos, 2f)
+
     val particles = mergeParticles(light, medium, heavy)
-    val solver = helper.createFluidSolver(particles)
+    val collisions = listOf(
+        BoundsCollisions(helper.bounds),
+        spCol
+    )
+    val solver = helper.createFluidSolver(particles, collisions)
 
     val graph = QuickPipeline()
         .then(BoxCullingNode())
@@ -288,9 +303,19 @@ fun main() {
     val scene = Entity()
         .add(ParticlePhysics(solver, 1f / 60f))
 
-    Entity("Occluder", scene)
+    val sphere = Entity("Occluder", scene)
         .add(MeshComponent(DefaultAssets.uvSphere, DefaultAssets.steelMaterial))
-        .setPosition(0.0, 1.5, 0.0)
-        .setScale(3f)
+        .setPosition(spPos.x.toDouble(), spPos.y.toDouble(), spPos.z.toDouble())
+        .setScale(spCol.radius)
+
+    class SphereUpdater : Component(), OnUpdate {
+        override fun onUpdate() {
+            spCol.position.set(sphere.transform.localPosition)
+            spCol.radius = sphere.transform.localScale.x
+        }
+    }
+
+    sphere.add(SphereUpdater())
+
     testSceneWithUI("FluidDensityTest", scene, renderMode)
 }

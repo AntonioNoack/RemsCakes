@@ -73,6 +73,9 @@ import kotlin.math.sin
 // done player can grab stuff -> we kind of have a sample for that: GemMiner
 // todo player can throw things, let them fall
 // todo player is in a relatively simple environment
+// todo room feels claustrophobic, add a side-room with swinging door
+// todo add probs to "kick" around: chairs, cutting boards, knifes, ...
+// todo magic edge on knife, which separates bonds
 
 var debugScene = false
 

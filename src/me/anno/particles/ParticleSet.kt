@@ -27,13 +27,13 @@ class ParticleSet(
     val vy: FloatArray = original?.vy ?: FloatArray(size)
     val vz: FloatArray = original?.vz ?: FloatArray(size)
 
-    // Inverse mass (0 = static)
-    val invMass: FloatArray = original?.invMass ?: FloatArray(size)
-
     // Temporary predicted positions
     val tx: FloatArray = original?.tx ?: FloatArray(size)
     val ty: FloatArray = original?.ty ?: FloatArray(size)
     val tz: FloatArray = original?.tz ?: FloatArray(size)
+
+    // Inverse mass (0 = static)
+    val invMass: FloatArray = original?.invMass ?: FloatArray(size)
 
     // Granular radius
     val radius: FloatArray = original?.radius ?: FloatArray(size)

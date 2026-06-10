@@ -4,9 +4,9 @@ import me.anno.ecs.Entity
 import me.anno.engine.ui.render.SceneView.Companion.testSceneWithUI
 import me.anno.particles.broadphase.SparseParticleGrid
 import me.anno.particles.constraints.*
-import me.anno.particles.utils.BoundaryBullet
 import me.anno.particles.utils.ParticlePhysics
 import me.anno.particles.utils.SphereParticleRenderer
+import me.anno.particles.world.BoundsCollisions
 import me.anno.utils.assertions.assertEquals
 import me.anno.utils.assertions.assertTrue
 import org.joml.AABBf
@@ -61,7 +61,7 @@ class NoodleSimulationTests {
             particles = particles,
             constraints = ArrayList(constraints),
             ParticleContactSolver(particles, SparseParticleGrid(0.07f)),
-            ParticleRigidContactSolver(particles, BoundaryBullet(bounds)),
+            ParticleRigidContactSolver(particles, listOf(BoundsCollisions(bounds))),
             config = ParticleSolverConfig(solverIterations = 10)
         )
     }
